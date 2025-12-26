@@ -30,7 +30,7 @@ Dựa trên biểu đồ ACF/PACF của chuỗi sau khi sai phân bậc 2:
 ![alt text](image.png)
 
 - Tham số $p=2$ (Bậc tự hồi quy - AR):
-    - Lý do: Biểu đồ PACF cho thấy hiện tượng "cắt cụt" (cut-off) sau lag 2, với hai cột đầu tiên vượt xa ngưỡng tin cậy $\pm 0.1379$7.
+    - Lý do: Biểu đồ PACF cho thấy hiện tượng "cắt cụt" (cut-off) sau lag 2, với hai cột đầu tiên vượt xa ngưỡng tin cậy 0.1379.
 - Tham số $q=1$ (Bậc trung bình trượt - MA):
     - Lý do: Biểu đồ ACF cho thấy lag 1 là thành phần tương quan ngắn hạn rõ rệt nhất trước khi chuỗi đi vào vùng ổn định.
-- Tham số mùa vụ: Xuất hiện tương quan cực cao tại lag 12 trên cả hai biểu đồ, gợi ý sử dụng chu kỳ mùa vụ $s=12$9.
+- Tham số mùa vụ: Xuất hiện tương quan cực cao tại lag 12 trên cả hai biểu đồ, gợi ý sử dụng chu kỳ mùa vụ $s=12$.
