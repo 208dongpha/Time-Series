@@ -1,0 +1,23 @@
+2025-12-26 11:26:56,758 - === START ARIMA & SARIMA PIPELINE ===
+2025-12-26 11:26:56,759 - Loading data from C:\Users\Admin\Desktop\timeseries\practice\statistical_model\data\monthlyretailsales.csv
+2025-12-26 11:26:57,188 - Saved figure: 01_original_series.png
+2025-12-26 11:26:57,195 - Differencing with order d=1
+2025-12-26 11:26:57,202 - p-value > 0.05, trying d=2...
+2025-12-26 11:26:57,202 - Differencing with order d=2
+2025-12-26 11:26:57,553 - Saved figure: 03_acf_pacf.png
+2025-12-26 11:26:57,556 - Train size: 163, Test size: 41
+2025-12-26 11:26:57,557 - Fitting ARIMA(2, 2, 1)
+2025-12-26 11:26:57,749 - Fitting SARIMA(1, 1, 1)x(1, 1, 1, 12)
+2025-12-26 11:26:58,051 - Generating diagnostics for ARIMA...
+2025-12-26 11:26:58,324 - Saved figure: 04_residuals_ARIMA.png
+2025-12-26 11:26:58,563 - Saved figure: 05_residuals_acf_ARIMA.png
+2025-12-26 11:26:58,563 - Generating diagnostics for SARIMA...
+2025-12-26 11:26:58,835 - Saved figure: 04_residuals_SARIMA.png
+2025-12-26 11:26:59,053 - Saved figure: 05_residuals_acf_SARIMA.png
+2025-12-26 11:26:59,053 - Forecasting 41 steps
+2025-12-26 11:26:59,058 - Forecasting 41 steps
+2025-12-26 11:26:59,063 - --- SO SÁNH AIC ---
+2025-12-26 11:26:59,064 - ARIMA AIC: 597.03
+2025-12-26 11:26:59,064 - SARIMA AIC: 245.41
+2025-12-26 11:26:59,424 - Saved figure: 07_comparison_forecast.png
+2025-12-26 11:26:59,424 - === END PIPELINE ===
