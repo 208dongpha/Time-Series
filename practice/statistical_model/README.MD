@@ -26,6 +26,9 @@ Dựa trên dữ liệu kiểm thử, mô hình SARIMA cho thấy sự vượt t
 ![alt text]({8CE48665-F8FA-457B-A6A6-7945792DCD23}.png)
 
 Dựa trên biểu đồ ACF/PACF của chuỗi sau khi sai phân bậc 2:
+
+![alt text](image.png)
+
 - Tham số $p=2$ (Bậc tự hồi quy - AR):
     - Lý do: Biểu đồ PACF cho thấy hiện tượng "cắt cụt" (cut-off) sau lag 2, với hai cột đầu tiên vượt xa ngưỡng tin cậy $\pm 0.1379$7.
 - Tham số $q=1$ (Bậc trung bình trượt - MA):
