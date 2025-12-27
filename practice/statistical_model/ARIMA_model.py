@@ -33,6 +33,12 @@ def get_log_dir() -> Path:
     return log_dir
 
 
+# --- Hàm hỗ trợ ghi file ---
+def save_report(content, filename):
+    with open(filename, 'w', encoding='utf-8') as f:
+        f.write(content)
+    print(f"Successfully generated: {filename}")
+
 # =====================================================
 # LOGGER
 # =====================================================
@@ -106,6 +112,86 @@ def plot_acf_pacf(ts: pd.Series, lags: int = 24):
     save_plot(fig, "03_acf_pacf.png")
 
 
+def generate_analysis_report(ts: pd.Series):
+    ts = ts.dropna()
+    n = len(ts)
+
+    # Z-scores
+    z_90 = 1.645
+    z_95 = 1.960
+    z_99 = 2.576
+
+    th_90 = z_90 / np.sqrt(n)
+    th_95 = z_95 / np.sqrt(n)
+    th_99 = z_99 / np.sqrt(n)
+
+    acf_vals = acf(ts, nlags=10)
+    pacf_vals = pacf(ts, nlags=10, method="ywm")
+
+    report = []
+    report.append("ACF and PACF Analysis for ARIMA Model Selection")
+    report.append("=" * 60)
+    report.append(f"Data length: {n}")
+    report.append(f"Date range: {ts.index[0]} to {ts.index[-1]}")
+    report.append(f"Mean: {ts.mean():.2f}")
+    report.append(f"Std deviation: {ts.std():.2f}\n")
+
+    report.append("=" * 60)
+    report.append("THRESHOLD SELECTION EXPLANATION")
+    report.append("=" * 60)
+    report.append(f"Sample size (n): {n}\n")
+
+    report.append("Confidence Interval Thresholds:")
+    report.append(f"  90% CI threshold: ±{th_90:.4f}")
+    report.append(f"  95% CI threshold: ±{th_95:.4f} (used for analysis)")
+    report.append(f"  99% CI threshold: ±{th_99:.4f}\n")
+
+    report.append(f"Threshold Used: {th_95:.4f}\n")
+
+    report.append("Origin of Z-Score Values (1.65, 1.96, 2.58):")
+    report.append("  These are critical values (z-scores) from the Standard Normal Distribution:")
+    report.append("  - 1.65 ≈ z(0.95)  for 90% CI")
+    report.append("  - 1.96 ≈ z(0.975) for 95% CI")
+    report.append("  - 2.58 ≈ z(0.995) for 99% CI\n")
+
+    report.append("  Statistical Basis:")
+    report.append("  Under the null hypothesis (no autocorrelation),")
+    report.append("  ACF/PACF values follow approximately N(0, 1/√n)")
+    report.append("  CI = ±z_α/2 / √n\n")
+
+    report.append("ARIMA Model Selection Guidelines:")
+    report.append("  - AR order (p): Determined from PACF cutoff")
+    report.append("  - MA order (q): Determined from ACF cutoff")
+    report.append("  - Differencing order (d): Determined using ADF test")
+    report.append("  - Values beyond ±threshold indicate significance\n")
+
+    report.append("=" * 60)
+    report.append(f"Significant PACF lags (|PACF| > {th_95:.4f}) - for AR order:")
+    for i, v in enumerate(pacf_vals[1:], 1):
+        if abs(v) > th_95:
+            report.append(f"  Lag {i}: {v:.4f}")
+
+    report.append("\n" + "=" * 60)
+    report.append(f"Significant ACF lags (|ACF| > {th_95:.4f}) - for MA order:")
+    for i, v in enumerate(acf_vals[1:], 1):
+        if abs(v) > th_95:
+            report.append(f"  Lag {i}: {v:.4f}")
+
+    # Heuristic cutoff (lag đầu tiên vượt ngưỡng)
+    p_cut = next((i for i, v in enumerate(pacf_vals[1:], 1) if abs(v) > th_95), 0)
+    q_cut = next((i for i, v in enumerate(acf_vals[1:], 1) if abs(v) > th_95), 0)
+
+    report.append("\n" + "=" * 60)
+    report.append(f"Suggested ARIMA order: AR({p_cut}), I(d), MA({q_cut})")
+    report.append("Note: Differencing order (d) is determined separately using ADF test\n")
+    report.append(
+        "Note: Visual inspection of ACF/PACF plots is recommended to confirm\n"
+        "      the cutoff points and validate the model order selection."
+    )
+
+    return "\n".join(report)
+
+
 # =====================================================
 # ADF
 # =====================================================
@@ -125,6 +211,66 @@ def adf_test(ts: pd.Series, d: int = 0):
     return stat, pval
 
 
+# 2. TẠO BÁO CÁO ADF TEST (Tính dừng)
+def generate_stationarity_report(ts: pd.Series, alpha: float = 0.05):
+    ts = ts.dropna()
+    n = len(ts)
+
+    def iterative_difference(ts, d):
+        temp = ts.copy()
+        for _ in range(d):
+            temp = temp.diff().dropna()
+        return temp
+
+    report = []
+    report.append("Stationarity Test Results (Augmented Dickey-Fuller Test)")
+    report.append("=" * 60)
+    report.append(f"Original data length: {n}")
+    report.append(f"Date range: {ts.index[0]} to {ts.index[-1]}\n")
+
+    report.append("=" * 60)
+    report.append("TEST RESULTS FOR DIFFERENT DIFFERENCING ORDERS")
+    report.append("=" * 60)
+
+    best_d = None
+
+    for d in [0, 1, 2]:
+        ts_d = ts if d == 0 else iterative_difference(ts, d)
+
+        stat, pval, _, _, crit, _ = adfuller(ts_d)
+
+        report.append(
+            f"\nDifferencing Order d = {d} " +
+            ("(Original):" if d == 0 else f"(Differenced {d} time{'s' if d > 1 else ''}):")
+        )
+        report.append(f"  ADF Statistic: {stat:.4f}")
+        report.append(f"  p-value: {pval:.4f}")
+        report.append("  Critical Values:")
+        for k, v in crit.items():
+            report.append(f"    {k}: {v:.4f}")
+
+        stationary = pval < alpha
+        report.append(
+            f"  Stationary: {'Yes' if stationary else 'No'} "
+            f"(p-value {'<' if stationary else '>='} {alpha})"
+        )
+        report.append(f"  Number of observations: {len(ts_d)}")
+
+        if stationary and best_d is None:
+            best_d = d
+
+    report.append("\n" + "=" * 60)
+    report.append(f"Suggested Differencing Order (d): {best_d}\n")
+
+    report.append("Interpretation:")
+    report.append("  - H0 (null hypothesis): Series has a unit root (non-stationary)")
+    report.append("  - H1 (alternative): Series is stationary")
+    report.append(f"  - If p-value < {alpha}: Reject H0, series is stationary")
+    report.append(f"  - If p-value >= {alpha}: Fail to reject H0, series is non-stationary")
+
+    return "\n".join(report)
+
+
 # =====================================================
 # TRANSFORM
 # =====================================================
@@ -135,6 +281,129 @@ def difference(ts: pd.Series, d: int = 1) -> pd.Series:
         temp_ts = temp_ts.diff().dropna()
     return temp_ts
 
+
+def generate_z_table_report(n_sample: int):
+    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+    # -------------------------------
+    # Z-scores (standard, fixed)
+    # -------------------------------
+    z_values = [
+        (80.0, 0.200, 1.2816),
+        (85.0, 0.150, 1.4395),
+        (90.0, 0.100, 1.6449),
+        (95.0, 0.050, 1.9600),
+        (99.0, 0.010, 2.5758),
+        (99.9, 0.001, 3.2905),
+    ]
+
+    percentile_table = [
+        (50.00, 0.0000, "50%", "Median"),
+        (60.00, 0.2533, "60%", ""),
+        (70.00, 0.5244, "70%", ""),
+        (75.00, 0.6745, "75%", ""),
+        (80.00, 0.8416, "80%", "Common threshold"),
+        (85.00, 1.0364, "85%", ""),
+        (90.00, 1.2816, "90%", "Common threshold"),
+        (95.00, 1.6449, "95%", "Very common"),
+        (97.50, 1.9600, "97.5%", "95% CI (two-tailed)"),
+        (99.00, 2.3263, "99%", "Common threshold"),
+        (99.50, 2.5758, "99.5%", "99% CI (two-tailed)"),
+        (99.90, 3.0902, "99.9%", "High confidence"),
+        (99.95, 3.2905, "99.95%", "Very high confidence"),
+    ]
+
+    # -------------------------------
+    # Thresholds for THIS dataset
+    # -------------------------------
+    z_90 = 1.6449
+    z_95 = 1.9600
+    z_99 = 2.5758
+
+    thr_90 = z_90 / np.sqrt(n_sample)
+    thr_95 = z_95 / np.sqrt(n_sample)
+    thr_99 = z_99 / np.sqrt(n_sample)
+
+    # -------------------------------
+    # Report
+    # -------------------------------
+    report = []
+
+    report.append("=" * 80)
+    report.append("STANDARD NORMAL DISTRIBUTION (Z-TABLE)")
+    report.append("Critical Values for ACF / PACF Confidence Intervals")
+    report.append("=" * 80 + "\n")
+
+    report.append("This report explains the statistical basis used to determine")
+    report.append("confidence interval thresholds in ACF and PACF analysis.\n")
+
+    report.append("Statistical assumption:")
+    report.append("Under the null hypothesis of no autocorrelation,")
+    report.append("sample ACF and PACF values are approximately distributed as:")
+    report.append("  N(0, 1 / √n)\n")
+
+    report.append("Confidence interval formula:")
+    report.append("  CI = ± z_(α/2) / √n\n")
+
+    # -------------------------------
+    # Confidence levels
+    # -------------------------------
+    report.append("=" * 80)
+    report.append("COMMONLY USED CONFIDENCE LEVELS")
+    report.append("=" * 80)
+    report.append("Confidence Level      Two-Tailed α      Z-Score (zα/2)")
+    report.append("-" * 80)
+
+    for cl, alpha, z in z_values:
+        report.append(f"{cl:>6.1f}%{'':14}{alpha:<16.3f}{z:>10.4f}")
+
+    # -------------------------------
+    # Percentile table
+    # -------------------------------
+    report.append("\n" + "=" * 80)
+    report.append("DETAILED Z-TABLE (COMMON PERCENTILES)")
+    report.append("=" * 80)
+    report.append("Percentile      Z-Score      Confidence Level     Usage")
+    report.append("-" * 80)
+
+    for p, z, cl, usage in percentile_table:
+        report.append(f"{p:>6.2f}%{'':8}{z:<12.4f}{cl:<20}{usage}")
+
+    # -------------------------------
+    # Application to dataset
+    # -------------------------------
+    report.append("\n" + "=" * 80)
+    report.append("APPLICATION TO YOUR DATASET")
+    report.append("=" * 80)
+    report.append(f"Sample size (n): {n_sample}\n")
+
+    report.append("Calculated confidence thresholds:")
+    report.append(f"  90% CI  : ±{thr_90:.4f}   (z = 1.645)")
+    report.append(f"  95% CI  : ±{thr_95:.4f}   (z = 1.96)  ← used for analysis")
+    report.append(f"  99% CI  : ±{thr_99:.4f}   (z = 2.576)\n")
+
+    report.append("Interpretation for ACF/PACF plots:")
+    report.append(f"- Any ACF or PACF value exceeding ±{thr_95:.4f}")
+    report.append("  is considered statistically significant.")
+    report.append("- Significant PACF lags suggest AR order (p).")
+    report.append("- Significant ACF lags suggest MA order (q).")
+    report.append("- Differencing order (d) is determined separately using ADF test.\n")
+
+    # -------------------------------
+    # Notes
+    # -------------------------------
+    report.append("=" * 80)
+    report.append("NOTES")
+    report.append("=" * 80)
+    report.append("- Z-scores are derived from the Standard Normal Distribution N(0,1).")
+    report.append("- Two-tailed confidence intervals are used for ACF/PACF analysis.")
+    report.append("- This approximation is valid for large samples (n > 30).")
+    report.append("- For small samples, t-distribution may be more appropriate.\n")
+
+    report.append(f"Generated: {timestamp}")
+    report.append("=" * 80)
+
+    return "\n".join(report)
 
 # =====================================================
 # SPLIT
@@ -320,6 +589,23 @@ def main():
     plot_acf_pacf(ts_final)
     p_lags, q_lags = suggest_arima_lags(ts_final, max_lag=20, d_val=d_final)
 
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+
+    save_report(
+        generate_z_table_report(len(ts)),
+        f"logs/z_table_{timestamp}.txt"
+    )
+
+    save_report(
+        generate_stationarity_report(ts),
+        f"logs/stationarity_test_{timestamp}.txt"
+    )
+
+    save_report(
+        generate_analysis_report(ts_final),
+        f"logs/ACF_PACF_Analysis_{timestamp}.txt"
+    )
+
     # 5. Chia tập Train/Test (80/20)
     train, test = split(ts)
 
@@ -331,17 +617,17 @@ def main():
     # 7. Huấn luyện mô hình SARIMA (Mô hình xử lý cả xu hướng và mùa vụ)
     # Thêm thành phần seasonal_order (P, D, Q, s) với s=12 (tháng)
     seasonal_order = (1, 1, 1, 12)
-    best_sarima = fit_sarima(train, (1, 1, 1), seasonal_order)
+    best_sarima = fit_sarima(train, (1, d_final, 1), seasonal_order)
 
     # 8. Chẩn đoán phần dư (Residuals)
 
     # Chẩn đoán cho ARIMA
     main_logger.info("Generating diagnostics for ARIMA...")
-    residual_diagnostics(best_arima.resid, "ARIMA") 
+    residual_diagnostics(best_arima.resid, arima_order) 
 
     # Chẩn đoán cho SARIMA
     main_logger.info("Generating diagnostics for SARIMA...")
-    residual_diagnostics(best_sarima.resid, "SARIMA") 
+    residual_diagnostics(best_sarima.resid, (1, d_final, 1, 12))
 
     # 9. Dự báo trên tập Test
     pred_arima = forecast(best_arima, len(test))

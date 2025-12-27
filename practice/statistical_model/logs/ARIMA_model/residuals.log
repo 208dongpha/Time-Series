@@ -1,6 +1,6 @@
-2025-12-26 11:26:58,051 - Residual diagnostics ARIMAARIMA
-2025-12-26 11:26:58,051 - Residual mean: 0.086271
-2025-12-26 11:26:58,051 - Residual mean != 0 -> CHECK
-2025-12-26 11:26:58,563 - Residual diagnostics ARIMASARIMA
-2025-12-26 11:26:58,564 - Residual mean: 0.070205
-2025-12-26 11:26:58,564 - Residual mean != 0 -> CHECK
+2025-12-27 19:32:35,589 - Residual diagnostics ARIMA(2, 2, 1)
+2025-12-27 19:32:35,589 - Residual mean: 0.086271
+2025-12-27 19:32:35,590 - Residual mean != 0 -> CHECK
+2025-12-27 19:32:36,092 - Residual diagnostics ARIMA(1, 2, 1, 12)
+2025-12-27 19:32:36,092 - Residual mean: 0.009902
+2025-12-27 19:32:36,093 - Residual mean approx 0 -> OK

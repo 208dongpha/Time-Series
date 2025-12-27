@@ -1,0 +1,74 @@
+================================================================================
+STANDARD NORMAL DISTRIBUTION (Z-TABLE)
+Critical Values for ACF / PACF Confidence Intervals
+================================================================================
+
+This report explains the statistical basis used to determine
+confidence interval thresholds in ACF and PACF analysis.
+
+Statistical assumption:
+Under the null hypothesis of no autocorrelation,
+sample ACF and PACF values are approximately distributed as:
+  N(0, 1 / √n)
+
+Confidence interval formula:
+  CI = ± z_(α/2) / √n
+
+================================================================================
+COMMONLY USED CONFIDENCE LEVELS
+================================================================================
+Confidence Level      Two-Tailed α      Z-Score (zα/2)
+--------------------------------------------------------------------------------
+  80.0%              0.200               1.2816
+  85.0%              0.150               1.4395
+  90.0%              0.100               1.6449
+  95.0%              0.050               1.9600
+  99.0%              0.010               2.5758
+  99.9%              0.001               3.2905
+
+================================================================================
+DETAILED Z-TABLE (COMMON PERCENTILES)
+================================================================================
+Percentile      Z-Score      Confidence Level     Usage
+--------------------------------------------------------------------------------
+ 50.00%        0.0000      50%                 Median
+ 60.00%        0.2533      60%                 
+ 70.00%        0.5244      70%                 
+ 75.00%        0.6745      75%                 
+ 80.00%        0.8416      80%                 Common threshold
+ 85.00%        1.0364      85%                 
+ 90.00%        1.2816      90%                 Common threshold
+ 95.00%        1.6449      95%                 Very common
+ 97.50%        1.9600      97.5%               95% CI (two-tailed)
+ 99.00%        2.3263      99%                 Common threshold
+ 99.50%        2.5758      99.5%               99% CI (two-tailed)
+ 99.90%        3.0902      99.9%               High confidence
+ 99.95%        3.2905      99.95%              Very high confidence
+
+================================================================================
+APPLICATION TO YOUR DATASET
+================================================================================
+Sample size (n): 204
+
+Calculated confidence thresholds:
+  90% CI  : ±0.1152   (z = 1.645)
+  95% CI  : ±0.1372   (z = 1.96)  ← used for analysis
+  99% CI  : ±0.1803   (z = 2.576)
+
+Interpretation for ACF/PACF plots:
+- Any ACF or PACF value exceeding ±0.1372
+  is considered statistically significant.
+- Significant PACF lags suggest AR order (p).
+- Significant ACF lags suggest MA order (q).
+- Differencing order (d) is determined separately using ADF test.
+
+================================================================================
+NOTES
+================================================================================
+- Z-scores are derived from the Standard Normal Distribution N(0,1).
+- Two-tailed confidence intervals are used for ACF/PACF analysis.
+- This approximation is valid for large samples (n > 30).
+- For small samples, t-distribution may be more appropriate.
+
+Generated: 2025-12-27 19:32:34
+================================================================================
