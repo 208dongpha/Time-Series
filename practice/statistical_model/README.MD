@@ -1,6 +1,6 @@
 # Phân Tích và Dự Báo Doanh Số Bán Lẻ bằng ARIMA và SARIMA
 
-## 📋 Tổng Quan Dự Án
+## Tổng Quan Dự Án
 
 Dự án này thực hiện phân tích và dự báo chuỗi thời gian doanh số bán lẻ hàng tháng sử dụng các mô hình thống kê ARIMA (AutoRegressive Integrated Moving Average) và SARIMA (Seasonal ARIMA). Mục tiêu là so sánh hiệu quả giữa hai mô hình trong việc dự báo dữ liệu có xu hướng tăng trưởng mạnh và tính mùa vụ rõ rệt.
 
@@ -15,7 +15,7 @@ Dựa trên dữ liệu kiểm thử, mô hình **SARIMA** cho thấy sự vư�
 
 ---
 
-## 🛠️ Cài Đặt và Yêu Cầu
+## Cài Đặt và Yêu Cầu
 
 ### Yêu Cầu Hệ Thống
 
@@ -37,7 +37,7 @@ pip install -r requirements.txt
 
 ---
 
-## 📁 Cấu Trúc Dự Án
+## Cấu Trúc Dự Án
 
 ```
 statistical_model/
@@ -54,7 +54,7 @@ statistical_model/
 
 ---
 
-## 📖 Giải Thích Code Chi Tiết
+## Giải Thích Code Chi Tiết
 
 ### 1. Cấu Trúc Tổng Quan
 
@@ -302,13 +302,13 @@ def evaluation(test: pd.Series, pred: pd.Series, model_name: str):
 
 ---
 
-## 🔍 Phân Tích Chi Tiết 3 Báo Cáo Chính
+## Phân Tích Chi Tiết 3 Báo Cáo Chính
 
 Phần này tập trung phân tích chi tiết 3 file báo cáo quan trọng nhất trong quá trình xây dựng mô hình ARIMA/SARIMA:
 
 ---
 
-## 📊 1. Báo Cáo Kiểm Định Tính Dừng: `stationarity_test_YYYYMMDD_HHMMSS.txt`
+## 1. Báo Cáo Kiểm Định Tính Dừng: `stationarity_test_YYYYMMDD_HHMMSS.txt`
 
 ### Nội Dung Báo Cáo
 
@@ -405,9 +405,9 @@ Suggested Differencing Order (d): 2
 
 | Bậc Sai Phân | ADF Statistic | p-value | So với CV 5% | Kết Luận | Số Quan Sát |
 |--------------|---------------|---------|--------------|----------|-------------|
-| **d = 0** | 3.1452 | 1.0000 | > -2.8770 | ❌ Không dừng | 204 |
-| **d = 1** | -2.4952 | 0.1167 | > -2.8771 | ❌ Không dừng | 203 |
-| **d = 2** | **-10.2923** | **0.0000** | **<< -2.8771** | ✅ **Dừng** | 202 |
+| **d = 0** | 3.1452 | 1.0000 | > -2.8770 | Không dừng | 204 |
+| **d = 1** | -2.4952 | 0.1167 | > -2.8771 | Không dừng | 203 |
+| **d = 2** | **-10.2923** | **0.0000** | **<< -2.8771** | **Dừng** | 202 |
 
 ### Kết Luận
 
@@ -505,14 +505,14 @@ Với n = 202:
 
 | Lag | PACF Value | |PACF| | Vượt Ngưỡng | Ý Nghĩa |
 |-----|------------|-------|-------------|----------|
-| **1** | -0.6346 | 0.6346 | ✅ Rất lớn | Tương quan trực tiếp mạnh với lag 1 |
-| **2** | -0.3673 | 0.3673 | ✅ Lớn | Tương quan trực tiếp với lag 2 |
-| **3** | -0.3032 | 0.3032 | ✅ Lớn | Tương quan trực tiếp với lag 3 |
-| **4** | -0.3189 | 0.3189 | ✅ Lớn | Tương quan trực tiếp với lag 4 |
-| **5** | -0.2062 | 0.2062 | ✅ Vừa | Tương quan trực tiếp với lag 5 |
-| **6** | -0.1817 | 0.1817 | ✅ Vừa | Tương quan trực tiếp với lag 6 |
-| **7** | -0.1527 | 0.1527 | ✅ Nhỏ | Tương quan trực tiếp với lag 7 |
-| **10** | 0.1872 | 0.1872 | ✅ Vừa | Tương quan trực tiếp với lag 10 |
+| **1** | -0.6346 | 0.6346 | Rất lớn | Tương quan trực tiếp mạnh với lag 1 |
+| **2** | -0.3673 | 0.3673 | Lớn | Tương quan trực tiếp với lag 2 |
+| **3** | -0.3032 | 0.3032 | Lớn | Tương quan trực tiếp với lag 3 |
+| **4** | -0.3189 | 0.3189 | Lớn | Tương quan trực tiếp với lag 4 |
+| **5** | -0.2062 | 0.2062 | Vừa | Tương quan trực tiếp với lag 5 |
+| **6** | -0.1817 | 0.1817 | Vừa | Tương quan trực tiếp với lag 6 |
+| **7** | -0.1527 | 0.1527 | Nhỏ | Tương quan trực tiếp với lag 7 |
+| **10** | 0.1872 | 0.1872 | Vừa | Tương quan trực tiếp với lag 10 |
 
 **Phân tích**:
 - **Lag 1 có giá trị tuyệt đối lớn nhất** (-0.63) → Gợi ý mạnh về AR(1)
@@ -530,9 +530,9 @@ Với n = 202:
 
 | Lag | ACF Value | |ACF| | Vượt Ngưỡng | Ý Nghĩa |
 |-----|----------|-------|-------------|----------|
-| **1** | -0.6346 | 0.6346 | ✅ Rất lớn | Tương quan tổng thể mạnh với lag 1 |
-| **2** | 0.1833 | 0.1833 | ✅ Vừa | Tương quan tổng thể với lag 2 |
-| **10** | 0.1771 | 0.1771 | ✅ Vừa | Tương quan tổng thể với lag 10 |
+| **1** | -0.6346 | 0.6346 | Rất lớn | Tương quan tổng thể mạnh với lag 1 |
+| **2** | 0.1833 | 0.1833 | Vừa | Tương quan tổng thể với lag 2 |
+| **10** | 0.1771 | 0.1771 | Vừa | Tương quan tổng thể với lag 10 |
 
 **Phân tích**:
 - **Lag 1 có giá trị tuyệt đối lớn nhất** (-0.63) → Gợi ý mạnh về MA(1)
@@ -739,7 +739,7 @@ Trong đó:
 
 ---
 
-## 📋 Tổng Kết 3 Báo Cáo
+## Tổng Kết 3 Báo Cáo
 
 ### Quy Trình Xây Dựng Mô Hình Dựa Trên 3 Báo Cáo
 
@@ -775,11 +775,11 @@ Trong đó:
 Dựa trên 3 báo cáo, mô hình được đề xuất:
 
 1. **ARIMA(2, 2, 1)**: Mô hình cơ bản, bỏ qua tính mùa vụ
-2. **SARIMA(1, 2, 1)(1, 1, 1, 12)**: Mô hình đầy đủ, bao gồm tính mùa vụ ⭐ **Khuyến nghị**
+2. **SARIMA(1, 2, 1)(1, 1, 1, 12)**: Mô hình đầy đủ, bao gồm tính mùa vụ **Khuyến nghị**
 
 ---
 
-## 📊 Phân Tích Hình Ảnh Đầu Ra
+## Phân Tích Hình Ảnh Đầu Ra
 
 ### 1. `01_original_series.png`
 
@@ -840,7 +840,7 @@ Dựa trên 3 báo cáo, mô hình được đề xuất:
 
 ---
 
-## 🚀 Hướng Dẫn Sử Dụng
+## Hướng Dẫn Sử Dụng
 
 ### Chạy Pipeline
 
@@ -889,7 +889,7 @@ seasonal_order = (1, 1, 1, 12)  # (P, D, Q, s)
 
 ---
 
-## 📝 Kết Luận
+## Kết Luận
 
 ### So Sánh ARIMA vs SARIMA
 
