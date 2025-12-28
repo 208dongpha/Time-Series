@@ -20,14 +20,20 @@ from statsmodels.tsa.stattools import acf, pacf
 # PATH
 # =====================================================
 def get_base_dir() -> Path:
+    """Lấy đường dẫn thư mục gốc chứa file script hiện tại."""
     return Path(__file__).resolve().parent
 
 
 def get_data_path() -> Path:
+    """Lấy đường dẫn tuyệt đối đến file dữ liệu CSV."""
     return get_base_dir() / "data" / "monthlyretailsales.csv"
 
 
 def get_log_dir() -> Path:
+    """
+    Lấy đường dẫn thư mục logs.
+    Tự động tạo thư mục (mkdir) nếu chưa tồn tại.
+    """
     log_dir = get_base_dir() / "logs" / "ARIMA_model"
     log_dir.mkdir(parents=True, exist_ok=True)
     return log_dir
@@ -43,13 +49,23 @@ def save_report(content, filename):
 # LOGGER
 # =====================================================
 def create_logger(name: str, filename: str) -> logging.Logger:
+    """
+    Khởi tạo và cấu hình một đối tượng logger để ghi log ra file.
+    
+    Args:
+        name: Tên định danh của logger (ví dụ: 'MAIN', 'ADF').
+        filename: Tên file log sẽ được lưu trong thư mục logs.
+    """
     logger = logging.getLogger(name)
     logger.setLevel(logging.INFO)
 
+    # Kiểm tra nếu logger đã có handler thì trả về luôn để tránh ghi trùng lặp log
     if logger.hasHandlers():
         return logger
 
+    # Cấu hình FileHandler để ghi log vào file với mã hóa utf-8
     fh = logging.FileHandler(get_log_dir() / filename, encoding="utf-8")
+    # Định dạng dòng log: Thời gian - Nội dung thông báo
     formatter = logging.Formatter("%(asctime)s - %(message)s")
     fh.setFormatter(formatter)
     logger.addHandler(fh)
@@ -57,13 +73,20 @@ def create_logger(name: str, filename: str) -> logging.Logger:
     return logger
 
 
+
+# Logger chính: Theo dõi luồng thực thi của toàn bộ pipeline (mỗi lần chạy tạo 1 file riêng theo timestamp)
 main_logger = create_logger(
     "MAIN", f"run_{datetime.now().strftime('%Y%m%d_%H%M%S')}.log"
 )
+# Logger ghi lại các gợi ý về bậc p (AR) và q (MA) dựa trên phân tích ACF/PACF
 lag_logger = create_logger("LAGS", "suggested_lags.log")
+# Logger lưu trữ chi tiết kết quả kiểm định tính dừng (ADF Test)
 adf_logger = create_logger("ADF", "adf.log")
+# Logger ghi lại các chỉ số AIC/BIC để so sánh và lựa chọn mô hình tối ưu
 ic_logger = create_logger("IC", "information_criteria.log")
+# Logger lưu kết quả đánh giá độ chính xác của mô hình (MAE, RMSE, MAPE)
 eval_logger = create_logger("EVAL", "evaluation.log")
+# Logger dùng cho việc chẩn đoán và kiểm tra tính chất của phần dư (residuals)
 res_logger = create_logger("RES", "residuals.log")
 
 
@@ -91,13 +114,15 @@ def load_data() -> pd.Series:
 # PLOT
 # =====================================================
 def save_plot(fig, filename: str):
+    """Lưu đối tượng Figure của Matplotlib vào thư mục logs và đóng figure để giải phóng bộ nhớ."""
     path = get_log_dir() / filename
     fig.savefig(path, dpi=300, bbox_inches="tight")
-    plt.close(fig)
+    plt.close(fig)  # Tránh rò rỉ bộ nhớ khi vẽ nhiều biểu đồ
     main_logger.info(f"Saved figure: {filename}")
 
 
 def plot_series(ts: pd.Series, title: str, filename: str):
+    """Vẽ biểu đồ đường cho chuỗi thời gian."""
     fig, ax = plt.subplots(figsize=(10, 4))
     ax.plot(ts)
     ax.set_title(title)
@@ -106,6 +131,7 @@ def plot_series(ts: pd.Series, title: str, filename: str):
 
 
 def plot_acf_pacf(ts: pd.Series, lags: int = 24):
+    """Vẽ biểu đồ ACF và PACF cạnh nhau để xác định bậc p (AR) và q (MA)."""
     fig, ax = plt.subplots(1, 2, figsize=(12, 4))
     plot_acf(ts, lags=lags, ax=ax[0])
     plot_pacf(ts, lags=lags, ax=ax[1])
@@ -113,18 +139,24 @@ def plot_acf_pacf(ts: pd.Series, lags: int = 24):
 
 
 def generate_analysis_report(ts: pd.Series):
+    """
+    Tạo báo cáo văn bản chi tiết về phân tích ACF/PACF.
+    Tính toán các ngưỡng tin cậy dựa trên phân phối chuẩn Z để gợi ý bậc mô hình.
+    """
     ts = ts.dropna()
     n = len(ts)
 
-    # Z-scores
+    # Các giá trị Z-score tới hạn (Critical Values) cho các khoảng tin cậy phổ biến
     z_90 = 1.645
     z_95 = 1.960
     z_99 = 2.576
 
+    # Công thức tính ngưỡng: CI = ±z / sqrt(n)
     th_90 = z_90 / np.sqrt(n)
     th_95 = z_95 / np.sqrt(n)
     th_99 = z_99 / np.sqrt(n)
 
+    # Lấy giá trị ACF/PACF cho 10 lag đầu tiên để đưa vào báo cáo
     acf_vals = acf(ts, nlags=10)
     pacf_vals = pacf(ts, nlags=10, method="ywm")
 
@@ -166,12 +198,14 @@ def generate_analysis_report(ts: pd.Series):
     report.append("  - Values beyond ±threshold indicate significance\n")
 
     report.append("=" * 60)
+    # Liệt kê các lag PACF vượt ngưỡng để gợi ý bậc AR (p)
     report.append(f"Significant PACF lags (|PACF| > {th_95:.4f}) - for AR order:")
     for i, v in enumerate(pacf_vals[1:], 1):
         if abs(v) > th_95:
             report.append(f"  Lag {i}: {v:.4f}")
 
     report.append("\n" + "=" * 60)
+    # Liệt kê các lag ACF vượt ngưỡng để gợi ý bậc MA (q)
     report.append(f"Significant ACF lags (|ACF| > {th_95:.4f}) - for MA order:")
     for i, v in enumerate(acf_vals[1:], 1):
         if abs(v) > th_95:
@@ -196,12 +230,14 @@ def generate_analysis_report(ts: pd.Series):
 # ADF
 # =====================================================
 def adf_test(ts: pd.Series, d: int = 0):
+    """Thực hiện kiểm định Augmented Dickey-Fuller (ADF) để kiểm tra tính dừng của chuỗi."""
     stat, pval = adfuller(ts.dropna())[0:2]
 
     adf_logger.info(f"--- ADF Test for d={d} ---")
     adf_logger.info(f"ADF Statistic: {stat}")
     adf_logger.info(f"p-value: {pval}")
 
+    # Nếu p-value < 0.05, ta bác bỏ giả thuyết H0, chuỗi được coi là có tính dừng
     if pval < 0.05:
         adf_logger.info("Conclusion: Stationary")
     else:
@@ -211,12 +247,17 @@ def adf_test(ts: pd.Series, d: int = 0):
     return stat, pval
 
 
-# 2. TẠO BÁO CÁO ADF TEST (Tính dừng)
+#TẠO BÁO CÁO ADF TEST (Tính dừng)
 def generate_stationarity_report(ts: pd.Series, alpha: float = 0.05):
+    """
+    Tạo báo cáo tổng hợp kết quả kiểm định ADF cho các bậc sai phân d = 0, 1, 2.
+    Giúp xác định bậc sai phân (d) cần thiết để làm cho chuỗi thời gian trở nên dừng.
+    """
     ts = ts.dropna()
     n = len(ts)
 
     def iterative_difference(ts, d):
+        """Hàm hỗ trợ thực hiện sai phân bậc d bằng cách lấy hiệu các giá trị liên tiếp."""
         temp = ts.copy()
         for _ in range(d):
             temp = temp.diff().dropna()
@@ -234,6 +275,7 @@ def generate_stationarity_report(ts: pd.Series, alpha: float = 0.05):
 
     best_d = None
 
+    # Duyệt qua các bậc sai phân phổ biến để tìm bậc tối ưu (thường d không quá 2)
     for d in [0, 1, 2]:
         ts_d = ts if d == 0 else iterative_difference(ts, d)
 
@@ -256,6 +298,7 @@ def generate_stationarity_report(ts: pd.Series, alpha: float = 0.05):
         )
         report.append(f"  Number of observations: {len(ts_d)}")
 
+        # Lưu lại bậc sai phân đầu tiên đạt tính dừng để gợi ý cho mô hình ARIMA
         if stationary and best_d is None:
             best_d = d
 
@@ -275,6 +318,13 @@ def generate_stationarity_report(ts: pd.Series, alpha: float = 0.05):
 # TRANSFORM
 # =====================================================
 def difference(ts: pd.Series, d: int = 1) -> pd.Series:
+    """
+    Thực hiện lấy sai phân (differencing) cho chuỗi thời gian để loại bỏ xu hướng.
+    
+    Args:
+        ts: Chuỗi thời gian đầu vào.
+        d: Bậc sai phân (số lần thực hiện trừ giá trị hiện tại cho giá trị trước đó).
+    """
     main_logger.info(f"Differencing with order d={d}")
     temp_ts = ts.copy()
     for _ in range(d):
@@ -283,10 +333,14 @@ def difference(ts: pd.Series, d: int = 1) -> pd.Series:
 
 
 def generate_z_table_report(n_sample: int):
+    """
+    Tạo báo cáo chi tiết về bảng tra cứu Z-score và các ngưỡng tin cậy cho ACF/PACF.
+    Báo cáo này giúp giải thích cơ sở toán học đằng sau việc chọn bậc p và q dựa trên kích thước mẫu.
+    """
     timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
     # -------------------------------
-    # Z-scores (standard, fixed)
+    # Z-scores (standard, fixed): Các giá trị Z phổ biến cho các mức tin cậy khác nhau
     # -------------------------------
     z_values = [
         (80.0, 0.200, 1.2816),
@@ -297,6 +351,7 @@ def generate_z_table_report(n_sample: int):
         (99.9, 0.001, 3.2905),
     ]
 
+    # Bảng chi tiết các phân vị (percentiles) của phân phối chuẩn tắc
     percentile_table = [
         (50.00, 0.0000, "50%", "Median"),
         (60.00, 0.2533, "60%", ""),
@@ -314,7 +369,8 @@ def generate_z_table_report(n_sample: int):
     ]
 
     # -------------------------------
-    # Thresholds for THIS dataset
+    # Thresholds for THIS dataset: Tính toán ngưỡng cụ thể cho tập dữ liệu hiện tại
+    # Công thức: Ngưỡng = Z / sqrt(n)
     # -------------------------------
     z_90 = 1.6449
     z_95 = 1.9600
@@ -354,6 +410,7 @@ def generate_z_table_report(n_sample: int):
     report.append("Confidence Level      Two-Tailed α      Z-Score (zα/2)")
     report.append("-" * 80)
 
+    # Duyệt qua danh sách Z-values để định dạng dòng dữ liệu cho bảng
     for cl, alpha, z in z_values:
         report.append(f"{cl:>6.1f}%{'':14}{alpha:<16.3f}{z:>10.4f}")
 
@@ -366,6 +423,7 @@ def generate_z_table_report(n_sample: int):
     report.append("Percentile      Z-Score      Confidence Level     Usage")
     report.append("-" * 80)
 
+    # Định dạng bảng phân vị chi tiết
     for p, z, cl, usage in percentile_table:
         report.append(f"{p:>6.2f}%{'':8}{z:<12.4f}{cl:<20}{usage}")
 
@@ -419,6 +477,11 @@ def split(ts: pd.Series, ratio: float = 0.8):
 # ARIMA
 # =====================================================
 def fit_arima(train: pd.Series, order: tuple):
+    """
+    Huấn luyện mô hình ARIMA với các tham số (p, d, q).
+    
+    Ghi lại các chỉ số AIC/BIC vào log để so sánh độ phù hợp giữa các mô hình.
+    """
     main_logger.info(f"Fitting ARIMA{order}")
     model = ARIMA(train, order=order)
     result = model.fit()
@@ -434,6 +497,11 @@ def fit_arima(train: pd.Series, order: tuple):
 # SARIMA
 # =====================================================
 def fit_sarima(train: pd.Series, order: tuple, s_order: tuple):
+    """
+    Huấn luyện mô hình SARIMA (Seasonal ARIMA).
+    
+    Bổ sung thành phần seasonal_order (P, D, Q, s) để xử lý dữ liệu có tính chu kỳ (mùa vụ).
+    """
     main_logger.info(f"Fitting SARIMA{order}x{s_order}")
     # statsmodels.tsa.arima.model.ARIMA hỗ trợ cả SARIMA qua seasonal_order
     model = ARIMA(train, order=order, seasonal_order=s_order)
@@ -447,6 +515,11 @@ def fit_sarima(train: pd.Series, order: tuple, s_order: tuple):
 # RESIDUALS
 # =====================================================
 def residual_diagnostics(residuals: pd.Series, order: tuple):
+    """
+    Thực hiện chẩn đoán phần dư (residuals) để kiểm tra chất lượng mô hình.
+    
+    Mục tiêu: Phần dư nên là nhiễu trắng (trung bình bằng 0, không còn tương quan).
+    """
     res_logger.info(f"Residual diagnostics ARIMA{order}")
 
     mean_res = residuals.mean()
@@ -472,11 +545,13 @@ def residual_diagnostics(residuals: pd.Series, order: tuple):
 # FORECAST & EVAL
 # =====================================================
 def forecast(model, steps: int) -> pd.Series:
+    """Dự báo các giá trị tương lai dựa trên mô hình đã huấn luyện."""
     main_logger.info(f"Forecasting {steps} steps")
     return model.forecast(steps=steps)
 
 
 def plot_forecast(train, test, pred):
+    """Vẽ biểu đồ so sánh giữa dữ liệu thực tế (Train/Test) và dữ liệu dự báo."""
     fig, ax = plt.subplots(figsize=(10, 4))
     ax.plot(train, label="Train")
     ax.plot(test, label="Test")
@@ -487,6 +562,7 @@ def plot_forecast(train, test, pred):
 
 
 def evaluation(test: pd.Series, pred: pd.Series, model_name: str):
+    """Tính toán và ghi log các chỉ số đo lường sai số: MAE, RMSE, MAPE."""
     mae = np.mean(np.abs(test - pred))
     rmse = np.sqrt(np.mean((test - pred) ** 2))
     mape = np.mean(np.abs((test - pred) / test)) * 100
@@ -504,6 +580,10 @@ def suggest_arima_lags(
     alpha: float = 0.05,
     d_val: int = 1  # Thêm tham số này để nhận giá trị d từ hàm main
 ):
+    """
+    Gợi ý các bậc p (AR) và q (MA) dựa trên các lag vượt ngưỡng tin cậy của PACF và ACF.
+    Trả về danh sách các ứng viên tiềm năng cho mô hình ARIMA.
+    """
     """
     Suggest AR (p) and MA (q) orders based on PACF & ACF
     """
@@ -546,6 +626,7 @@ def suggest_arima_lags(
     return p_lags, q_lags
 
 def plot_comparison(train, test, pred_arima, pred_sarima):
+    """Vẽ biểu đồ so sánh kết quả dự báo của hai mô hình ARIMA và SARIMA trên cùng một khung hình."""
     fig, ax = plt.subplots(figsize=(12, 6))
     ax.plot(train, label="Dữ liệu Train", color='blue', alpha=0.5)
     ax.plot(test, label="Dữ liệu Test (Thực tế)", color='orange')
@@ -561,16 +642,20 @@ def plot_comparison(train, test, pred_arima, pred_sarima):
 # MAIN
 # =====================================================
 def main():
+    """
+    Hàm điều khiển chính thực hiện toàn bộ quy trình:
+    Load -> EDA -> ADF Test -> Differencing -> ACF/PACF -> Model Fitting -> Evaluation -> Visualization.
+    """
     main_logger.info("=== START ARIMA & SARIMA PIPELINE ===")
 
-    # 1. Load và EDA dữ liệu
+    # Load và EDA dữ liệu
     ts = load_data()
     plot_series(ts, "Original Time Series", "01_original_series.png")
     
-    # 2. Kiểm định ADF trên chuỗi gốc (d=0)
+    # Kiểm định ADF trên chuỗi gốc (d=0)
     adf_test(ts, d=0)
 
-    # 3. Xử lý sai phân để tìm d tối ưu
+    # Xử lý sai phân để tìm d tối ưu
     ts_diff1 = difference(ts, d=1)
     stat1, p1 = adf_test(ts_diff1, d=1)
 
@@ -585,7 +670,7 @@ def main():
         ts_final = ts_diff1
         d_final = 1
 
-    # 4. Vẽ ACF / PACF trên chuỗi đã đạt tính dừng
+    # Vẽ ACF / PACF trên chuỗi đã đạt tính dừng
     plot_acf_pacf(ts_final)
     p_lags, q_lags = suggest_arima_lags(ts_final, max_lag=20, d_val=d_final)
 
@@ -606,20 +691,20 @@ def main():
         f"logs/ACF_PACF_Analysis_{timestamp}.txt"
     )
 
-    # 5. Chia tập Train/Test (80/20)
+    # Chia tập Train/Test (80/20)
     train, test = split(ts)
 
-    # 6. Huấn luyện mô hình ARIMA (Mô hình chỉ xử lý xu hướng)
-    # Dựa trên test của bạn, ta chọn (2, 2, 1) là ứng viên mạnh nhất
+    # Huấn luyện mô hình ARIMA (Mô hình chỉ xử lý xu hướng)
+    # Dựa trên test, ta chọn (2, 2, 1) là ứng viên mạnh nhất
     arima_order = (2, d_final, 1)
     best_arima = fit_arima(train, arima_order)
     
-    # 7. Huấn luyện mô hình SARIMA (Mô hình xử lý cả xu hướng và mùa vụ)
+    # Huấn luyện mô hình SARIMA (Mô hình xử lý cả xu hướng và mùa vụ)
     # Thêm thành phần seasonal_order (P, D, Q, s) với s=12 (tháng)
     seasonal_order = (1, 1, 1, 12)
     best_sarima = fit_sarima(train, (1, d_final, 1), seasonal_order)
 
-    # 8. Chẩn đoán phần dư (Residuals)
+    # Chẩn đoán phần dư (Residuals)
 
     # Chẩn đoán cho ARIMA
     main_logger.info("Generating diagnostics for ARIMA...")
@@ -629,7 +714,7 @@ def main():
     main_logger.info("Generating diagnostics for SARIMA...")
     residual_diagnostics(best_sarima.resid, (1, d_final, 1, 12))
 
-    # 9. Dự báo trên tập Test
+    # Dự báo trên tập Test
     pred_arima = forecast(best_arima, len(test))
     pred_sarima = forecast(best_sarima, len(test))
 
@@ -642,7 +727,7 @@ def main():
     evaluation(test, pred_arima, "ARIMA(2, 2, 1)") 
     evaluation(test, pred_sarima, "SARIMA(1, 1, 1)x(1, 1, 1, 12)")
 
-    # 11. Vẽ biểu đồ so sánh cuối cùng
+    # Vẽ biểu đồ so sánh cuối cùng
     plot_comparison(train, test, pred_arima, pred_sarima)
 
     main_logger.info("=== END PIPELINE ===")
