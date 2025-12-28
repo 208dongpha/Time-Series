@@ -567,8 +567,8 @@ Với n = 202:
 
 **Các lag có ý nghĩa thống kê** (|PACF| > 0.1379):
 
-| Lag | PACF Value | |PACF| | Vượt Ngưỡng | Ý Nghĩa |
-|-----|------------|-------|-------------|----------|
+| Lag | PACF Value | PACF Abs | Vượt Ngưỡng | Ý Nghĩa |
+|-----|------------|----------|-------------|----------|
 | **1** | -0.6346 | 0.6346 | Rất lớn | Tương quan trực tiếp mạnh với lag 1 |
 | **2** | -0.3673 | 0.3673 | Lớn | Tương quan trực tiếp với lag 2 |
 | **3** | -0.3032 | 0.3032 | Lớn | Tương quan trực tiếp với lag 3 |
@@ -592,8 +592,8 @@ Với n = 202:
 
 **Các lag có ý nghĩa thống kê** (|ACF| > 0.1379):
 
-| Lag | ACF Value | |ACF| | Vượt Ngưỡng | Ý Nghĩa |
-|-----|----------|-------|-------------|----------|
+| Lag | ACF Value | ACF Abs | Vượt Ngưỡng | Ý Nghĩa |
+|-----|----------|---------|-------------|----------|
 | **1** | -0.6346 | 0.6346 | Rất lớn | Tương quan tổng thể mạnh với lag 1 |
 | **2** | 0.1833 | 0.1833 | Vừa | Tương quan tổng thể với lag 2 |
 | **10** | 0.1771 | 0.1771 | Vừa | Tương quan tổng thể với lag 10 |
