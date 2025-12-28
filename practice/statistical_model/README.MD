@@ -254,32 +254,96 @@ def fit_sarima(train: pd.Series, order: tuple, s_order: tuple):
 ### 10. Chẩn Đoán Phần Dư (Residual Diagnostics)
 
 ```python
-def residual_diagnostics(residuals: pd.Series, order: tuple):
-    """Kiểm tra phần dư có phải là nhiễu trắng không."""
+def standardize_residuals(residuals: pd.Series) -> pd.Series:
+    """
+    Chuẩn hóa phần dư (standardized residuals).
+    
+    Công thức: standardized_residuals = (residuals - mean) / std
+    
+    Phần dư đã chuẩn hóa có trung bình = 0 và độ lệch chuẩn = 1,
+    giúp dễ dàng so sánh và phát hiện outliers.
+    """
     mean_res = residuals.mean()
+    std_res = residuals.std()
     
-    if abs(mean_res) < 0.01:
-        res_logger.info("Residual mean approx 0 -> OK")
-    else:
-        res_logger.info("Residual mean != 0 -> CHECK")
+    if std_res == 0:
+        res_logger.warning("Residual std = 0, cannot standardize")
+        return residuals
     
-    # Vẽ biểu đồ phần dư và ACF của phần dư
-    plot_residuals(residuals, order)
-    plot_residuals_acf(residuals, order)
+    standardized = (residuals - mean_res) / std_res
+    return standardized
+
+def residual_diagnostics(residuals: pd.Series, order: tuple):
+    """
+    Thực hiện chẩn đoán phần dư (residuals) để kiểm tra chất lượng mô hình.
+    
+    Mục tiêu: Phần dư nên là nhiễu trắng (trung bình bằng 0, không còn tương quan).
+    """
+    # Kiểm tra mean và std
+    mean_res = residuals.mean()
+    std_res = residuals.std()
+    res_logger.info(f"Residual mean: {mean_res:.6f}")
+    res_logger.info(f"Residual std: {std_res:.6f}")
+    
+    # Vẽ biểu đồ phần dư gốc
+    fig, ax = plt.subplots(figsize=(12, 4))
+    ax.plot(residuals)
+    ax.set_title(f"Residuals ARIMA{order}")
+    ax.grid()
+    save_plot(fig, f"04_residuals_{order}.png")
+    
+    # Chuẩn hóa phần dư
+    standardized_res = standardize_residuals(residuals)
+    res_logger.info(f"Standardized residuals - mean: {standardized_res.mean():.6f}, std: {standardized_res.std():.6f}")
+    
+    # Vẽ biểu đồ phần dư đã chuẩn hóa với các đường ±2σ và ±3σ
+    fig, ax = plt.subplots(figsize=(12, 4))
+    ax.plot(standardized_res)
+    ax.set_title(f"Standardized Residuals ARIMA{order}")
+    ax.axhline(y=0, color='r', linestyle='--', alpha=0.5)
+    ax.axhline(y=2, color='orange', linestyle='--', alpha=0.5, label='±2σ')
+    ax.axhline(y=-2, color='orange', linestyle='--', alpha=0.5)
+    ax.axhline(y=3, color='red', linestyle='--', alpha=0.5, label='±3σ')
+    ax.axhline(y=-3, color='red', linestyle='--', alpha=0.5)
+    ax.legend()
+    ax.grid()
+    save_plot(fig, f"04_residuals_standardized_{order}.png")
+    
+    # Vẽ ACF của phần dư đã chuẩn hóa
+    fig, ax = plt.subplots(figsize=(10, 4))
+    plot_acf(standardized_res.dropna(), lags=20, ax=ax)
+    ax.set_title(f"ACF of Standardized Residuals ARIMA{order}")
+    save_plot(fig, f"05_residuals_acf_{order}.png")
 ```
 
 **Giải thích**:
 - **Phần dư tốt** phải có:
   - Trung bình ≈ 0
+  - Độ lệch chuẩn ổn định
   - Không có tương quan (ACF của phần dư nằm trong ngưỡng tin cậy)
   - Phân phối chuẩn
+- **Chuẩn hóa phần dư**: Giúp phát hiện outliers dễ dàng hơn (giá trị > ±3σ được coi là outliers)
 - Nếu phần dư không phải nhiễu trắng → Mô hình chưa tốt, cần điều chỉnh
 
 **Kết quả từ log**:
 ```
-ARIMA(2, 2, 1): Residual mean = 0.086 → CHECK (hơi cao)
-SARIMA(1, 2, 1)x(1, 1, 1, 12): Residual mean = 0.010 → OK ✓
+ARIMA(2, 2, 1): 
+  Residual mean: 0.086271
+  Residual std: 3.642
+  Standardized residuals - mean: 0.000000, std: 1.000000
+  Residual mean != 0 -> CHECK
+
+SARIMA(1, 2, 1)x(1, 1, 1, 12): 
+  Residual mean: 0.009902
+  Residual std: 2.451
+  Standardized residuals - mean: 0.000000, std: 1.000000
+  Residual mean approx 0 -> OK ✓
 ```
+
+**Các biểu đồ được tạo**:
+- `04_residuals_{order}.png`: Biểu đồ phần dư gốc
+- `04_residuals_standardized_{order}.png`: Biểu đồ phần dư đã chuẩn hóa với các đường ±2σ (cam) và ±3σ (đỏ)
+- `05_residuals_acf_{order}.png`: ACF của phần dư đã chuẩn hóa
 
 ### 11. Dự Báo và Đánh Giá
 
@@ -308,7 +372,7 @@ Phần này tập trung phân tích chi tiết 3 file báo cáo quan trọng nh�
 
 ---
 
-## 1. Báo Cáo Kiểm Định Tính Dừng: `stationarity_test_YYYYMMDD_HHMMSS.txt`
+## 1. Báo Cáo Kiểm Định Tính Dừng: `stationarity_test`
 
 ### Nội Dung Báo Cáo
 
@@ -418,7 +482,7 @@ Suggested Differencing Order (d): 2
 
 ---
 
-## 📈 2. Báo Cáo Phân Tích ACF/PACF: `ACF_PACF_Analysis_YYYYMMDD_HHMMSS.txt`
+## 📈 2. Báo Cáo Phân Tích ACF/PACF: `ACF_PACF_Analysis`
 
 ### Nội Dung Báo Cáo
 
@@ -565,7 +629,7 @@ Với n = 202:
 
 ---
 
-## 📐 3. Bảng Tra Cứu Z-Score: `z_table_YYYYMMDD_HHMMSS.txt`
+## 📐 3. Bảng Tra Cứu Z-Score: `z_table`
 
 ### Nội Dung Báo Cáo
 
@@ -783,6 +847,8 @@ Dựa trên 3 báo cáo, mô hình được đề xuất:
 
 ### 1. `01_original_series.png`
 
+![alt text](image-1.png)
+
 **Mô tả**: Biểu đồ chuỗi thời gian gốc
 
 **Phân tích**:
@@ -791,6 +857,8 @@ Dựa trên 3 báo cáo, mô hình được đề xuất:
 - Dữ liệu không dừng (cần sai phân)
 
 ### 2. `03_acf_pacf.png`
+
+![alt text](image-2.png)
 
 **Mô tả**: Biểu đồ ACF và PACF của chuỗi sau khi sai phân bậc 2
 
@@ -805,23 +873,44 @@ Dựa trên 3 báo cáo, mô hình được đề xuất:
 
 ### 3. `04_residuals_(2, 2, 1).png` và `04_residuals_(1, 2, 1, 12).png`
 
-**Mô tả**: Biểu đồ phần dư của ARIMA và SARIMA
+![alt text](image-3.png) ![alt text](image-4.png)
+
+**Mô tả**: Biểu đồ phần dư gốc của ARIMA và SARIMA
 
 **Phân tích**:
 - **ARIMA**: Phần dư có vẻ còn một số pattern (không hoàn toàn ngẫu nhiên)
 - **SARIMA**: Phần dư trông ngẫu nhiên hơn, phân tán đều quanh 0
 - **Kết luận**: SARIMA có phần dư tốt hơn
 
+### 3b. `04_residuals_standardized_(2, 2, 1).png` và `04_residuals_standardized_(1, 2, 1, 12).png`
+
+![alt text](image-5.png) ![alt text](image-6.png)
+
+**Mô tả**: Biểu đồ phần dư đã chuẩn hóa của ARIMA và SARIMA
+
+**Phân tích**:
+- **Đường ±2σ (cam)**: 95% giá trị nên nằm trong khoảng này nếu phần dư phân phối chuẩn
+- **Đường ±3σ (đỏ)**: 99.7% giá trị nên nằm trong khoảng này
+- **Giá trị ngoài ±3σ**: Được coi là outliers, cần kiểm tra
+- **ARIMA**: Có thể có nhiều giá trị vượt ngưỡng ±2σ hoặc ±3σ
+- **SARIMA**: Hầu hết giá trị nằm trong ±2σ → Phần dư tốt hơn
+- **Kết luận**: Standardized residuals giúp dễ dàng so sánh và phát hiện outliers
+
 ### 4. `05_residuals_acf_(2, 2, 1).png` và `05_residuals_acf_(1, 2, 1, 12).png`
 
-**Mô tả**: ACF của phần dư
+![alt text](image-7.png) ![alt text](image-8.png)
+
+**Mô tả**: ACF của phần dư đã chuẩn hóa
 
 **Phân tích**:
 - **Lý tưởng**: Tất cả các lag nằm trong ngưỡng tin cậy (vùng xanh)
-- **ARIMA**: Có thể còn một số lag vượt ngưỡng
-- **SARIMA**: Hầu hết lag nằm trong ngưỡng → Phần dư gần với nhiễu trắng
+- **ARIMA**: Có thể còn một số lag vượt ngưỡng → Còn tương quan trong phần dư
+- **SARIMA**: Hầu hết lag nằm trong ngưỡng → Phần dư gần với nhiễu trắng (white noise)
+- **Kết luận**: ACF của standardized residuals giúp kiểm tra tính độc lập của phần dư
 
 ### 5. `07_comparison_forecast.png`
+
+![alt text](image-9.png)
 
 **Mô tả**: So sánh dự báo giữa ARIMA và SARIMA với dữ liệu thực tế
 
@@ -868,8 +957,9 @@ Sau khi chạy, bạn sẽ có:
 3. **Các biểu đồ** (`.png`):
    - `01_original_series.png`: Chuỗi gốc
    - `03_acf_pacf.png`: ACF/PACF
-   - `04_residuals_*.png`: Phần dư
-   - `05_residuals_acf_*.png`: ACF của phần dư
+   - `04_residuals_*.png`: Phần dư gốc
+   - `04_residuals_standardized_*.png`: Phần dư đã chuẩn hóa (với các đường ±2σ và ±3σ)
+   - `05_residuals_acf_*.png`: ACF của phần dư đã chuẩn hóa
    - `07_comparison_forecast.png`: So sánh dự báo
 
 ### Tùy Chỉnh Tham Số

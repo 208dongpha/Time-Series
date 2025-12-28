@@ -41,9 +41,16 @@ def get_log_dir() -> Path:
 
 # --- Hàm hỗ trợ ghi file ---
 def save_report(content, filename):
-    with open(filename, 'w', encoding='utf-8') as f:
+    """Lưu báo cáo vào file. Tự động sử dụng get_log_dir() nếu filename là đường dẫn tương đối."""
+    # Nếu filename không phải đường dẫn tuyệt đối, sử dụng get_log_dir()
+    if not Path(filename).is_absolute():
+        filepath = get_log_dir() / filename
+    else:
+        filepath = Path(filename)
+    
+    with open(filepath, 'w', encoding='utf-8') as f:
         f.write(content)
-    print(f"Successfully generated: {filename}")
+    print(f"Successfully generated: {filepath}")
 
 # =====================================================
 # LOGGER
@@ -514,6 +521,26 @@ def fit_sarima(train: pd.Series, order: tuple, s_order: tuple):
 # =====================================================
 # RESIDUALS
 # =====================================================
+def standardize_residuals(residuals: pd.Series) -> pd.Series:
+    """
+    Chuẩn hóa phần dư (standardized residuals).
+    
+    Công thức: standardized_residuals = (residuals - mean) / std
+    
+    Phần dư đã chuẩn hóa có trung bình = 0 và độ lệch chuẩn = 1,
+    giúp dễ dàng so sánh và phát hiện outliers.
+    """
+    mean_res = residuals.mean()
+    std_res = residuals.std()
+    
+    if std_res == 0:
+        res_logger.warning("Residual std = 0, cannot standardize")
+        return residuals
+    
+    standardized = (residuals - mean_res) / std_res
+    return standardized
+
+
 def residual_diagnostics(residuals: pd.Series, order: tuple):
     """
     Thực hiện chẩn đoán phần dư (residuals) để kiểm tra chất lượng mô hình.
@@ -523,21 +550,43 @@ def residual_diagnostics(residuals: pd.Series, order: tuple):
     res_logger.info(f"Residual diagnostics ARIMA{order}")
 
     mean_res = residuals.mean()
+    std_res = residuals.std()
     res_logger.info(f"Residual mean: {mean_res:.6f}")
+    res_logger.info(f"Residual std: {std_res:.6f}")
 
     if abs(mean_res) < 0.01:
         res_logger.info("Residual mean approx 0 -> OK")
     else:
         res_logger.info("Residual mean != 0 -> CHECK")
 
+    # Vẽ biểu đồ phần dư gốc
     fig, ax = plt.subplots(figsize=(12, 4))
     ax.plot(residuals)
     ax.set_title(f"Residuals ARIMA{order}")
     ax.grid()
     save_plot(fig, f"04_residuals_{order}.png")
 
+    # Chuẩn hóa phần dư
+    standardized_res = standardize_residuals(residuals)
+    res_logger.info(f"Standardized residuals - mean: {standardized_res.mean():.6f}, std: {standardized_res.std():.6f}")
+
+    # Vẽ biểu đồ phần dư đã chuẩn hóa
+    fig, ax = plt.subplots(figsize=(12, 4))
+    ax.plot(standardized_res)
+    ax.set_title(f"Standardized Residuals ARIMA{order}")
+    ax.axhline(y=0, color='r', linestyle='--', alpha=0.5)
+    ax.axhline(y=2, color='orange', linestyle='--', alpha=0.5, label='±2σ')
+    ax.axhline(y=-2, color='orange', linestyle='--', alpha=0.5)
+    ax.axhline(y=3, color='red', linestyle='--', alpha=0.5, label='±3σ')
+    ax.axhline(y=-3, color='red', linestyle='--', alpha=0.5)
+    ax.legend()
+    ax.grid()
+    save_plot(fig, f"04_residuals_standardized_{order}.png")
+
+    # Vẽ ACF của phần dư đã chuẩn hóa
     fig, ax = plt.subplots(figsize=(10, 4))
-    plot_acf(residuals.dropna(), lags=20, ax=ax)
+    plot_acf(standardized_res.dropna(), lags=20, ax=ax)
+    ax.set_title(f"ACF of Standardized Residuals ARIMA{order}")
     save_plot(fig, f"05_residuals_acf_{order}.png")
 
 
@@ -678,17 +727,17 @@ def main():
 
     save_report(
         generate_z_table_report(len(ts)),
-        f"logs/z_table_{timestamp}.txt"
+        f"z_table_{timestamp}.txt"
     )
 
     save_report(
         generate_stationarity_report(ts),
-        f"logs/stationarity_test_{timestamp}.txt"
+        f"stationarity_test_{timestamp}.txt"
     )
 
     save_report(
         generate_analysis_report(ts_final),
-        f"logs/ACF_PACF_Analysis_{timestamp}.txt"
+        f"ACF_PACF_Analysis_{timestamp}.txt"
     )
 
     # Chia tập Train/Test (80/20)
@@ -718,7 +767,7 @@ def main():
     pred_arima = forecast(best_arima, len(test))
     pred_sarima = forecast(best_sarima, len(test))
 
-    # 10. Đánh giá và So sánh
+    # Đánh giá và So sánh
     main_logger.info(f"--- SO SÁNH AIC ---")
     main_logger.info(f"ARIMA AIC: {best_arima.aic:.2f}")
     main_logger.info(f"SARIMA AIC: {best_sarima.aic:.2f}") 
