@@ -302,206 +302,275 @@ def evaluation(test: pd.Series, pred: pd.Series, model_name: str):
 
 ---
 
-## 🔍 Phân Tích Kết Quả Đầu Ra
+## 🔍 Phân Tích Chi Tiết 3 Báo Cáo Chính
 
-### 1. File Log: `run_YYYYMMDD_HHMMSS.log`
+Phần này tập trung phân tích chi tiết 3 file báo cáo quan trọng nhất trong quá trình xây dựng mô hình ARIMA/SARIMA:
 
-File này ghi lại toàn bộ luồng thực thi của pipeline:
+---
 
-```
-2025-12-28 18:58:35 - === START ARIMA & SARIMA PIPELINE ===
-2025-12-28 18:58:35 - Loading data from .../monthlyretailsales.csv
-2025-12-28 18:58:36 - Saved figure: 01_original_series.png
-2025-12-28 18:58:36 - Differencing with order d=1
-2025-12-28 18:58:36 - p-value > 0.05, trying d=2...
-2025-12-28 18:58:36 - Differencing with order d=2
-2025-12-28 18:58:36 - Saved figure: 03_acf_pacf.png
-2025-12-28 18:58:36 - Train size: 163, Test size: 41
-2025-12-28 18:58:36 - Fitting ARIMA(2, 2, 1)
-2025-12-28 18:58:37 - Fitting SARIMA(1, 2, 1)x(1, 1, 1, 12)
-2025-12-28 18:58:38 - Generating diagnostics for ARIMA...
-2025-12-28 18:58:39 - Forecasting 41 steps
-2025-12-28 18:58:39 - ARIMA AIC: 597.03
-2025-12-28 18:58:39 - SARIMA AIC: 279.03
-2025-12-28 18:58:39 - === END PIPELINE ===
-```
+## 📊 1. Báo Cáo Kiểm Định Tính Dừng: `stationarity_test_YYYYMMDD_HHMMSS.txt`
 
-**Phân tích**: Pipeline chạy thành công, tự động phát hiện cần sai phân bậc 2, và chia dữ liệu 80/20 cho train/test.
-
-### 2. File Log: `adf.log`
-
-Kết quả kiểm định tính dừng:
-
-```
---- ADF Test for d=0 ---
-ADF Statistic: 3.1452
-p-value: 1.0
-Conclusion: Non-stationary
-
---- ADF Test for d=1 ---
-ADF Statistic: -2.4952
-p-value: 0.1167
-Conclusion: Non-stationary
-
---- ADF Test for d=2 ---
-ADF Statistic: -10.2923
-p-value: 3.54e-18
-Conclusion: Stationary ✓
-```
-
-**Phân tích**:
-- Chuỗi gốc và sai phân bậc 1 đều **không dừng** (p-value > 0.05)
-- Chỉ sau khi sai phân bậc 2, chuỗi mới đạt tính dừng (p-value cực nhỏ)
-- **Quyết định**: Sử dụng `d = 2` cho mô hình ARIMA
-
-### 3. File Log: `suggested_lags.log`
-
-Gợi ý về bậc p và q:
-
-```
-=== SUGGESTED ARIMA LAGS ===
-Sample size (N): 202
-Confidence threshold: ±0.1379
-
-Suggested p (AR) lags from PACF: [1, 2, 3, 4, 5, 6, 7, 10, 11, 12, 16]
-Suggested q (MA) lags from ACF: [1, 2, 10, 11, 12, 13]
-
-Recommended ARIMA candidates: [(1, 2, 1), (1, 2, 2), (2, 2, 1), (2, 2, 2)]
-```
-
-**Phân tích**:
-- Nhiều lag vượt ngưỡng, nhưng thường chọn lag đầu tiên hoặc vài lag đầu
-- Code chọn 2 lag đầu tiên: `p_suggest = [1, 2]`, `q_suggest = [1, 2]`
-- Tạo ra 4 ứng viên: `(1,2,1)`, `(1,2,2)`, `(2,2,1)`, `(2,2,2)`
-- **Lưu ý**: Lag 12 xuất hiện trong cả ACF và PACF → Gợi ý mạnh về tính mùa vụ (s=12)
-
-### 4. File Log: `information_criteria.log`
-
-So sánh AIC/BIC giữa các mô hình:
-
-```
-ARIMA(2, 2, 1)
-AIC: 597.0252
-BIC: 609.3508
-
-SARIMA(1, 2, 1)x(1, 1, 1, 12)
-AIC: 279.03
-BIC: 294.05
-```
-
-**Phân tích**:
-- **AIC của SARIMA thấp hơn 53%** so với ARIMA → SARIMA phù hợp hơn rất nhiều
-- **BIC cũng thấp hơn đáng kể** → Xác nhận SARIMA là mô hình tốt hơn
-- **Kết luận**: SARIMA giải thích được nhiều biến thiên hơn với cùng số tham số (hoặc ít tham số hơn)
-
-### 5. File Log: `residuals.log`
-
-Chẩn đoán phần dư:
-
-```
-Residual diagnostics ARIMA(2, 2, 1)
-Residual mean: 0.086271
-Residual mean != 0 -> CHECK
-
-Residual diagnostics SARIMA(1, 2, 1, 12)
-Residual mean: 0.009902
-Residual mean approx 0 -> OK ✓
-```
-
-**Phân tích**:
-- **ARIMA**: Trung bình phần dư = 0.086 (hơi cao) → Có thể còn bias
-- **SARIMA**: Trung bình phần dư = 0.010 (rất gần 0) → Phần dư tốt hơn
-- **Kết luận**: SARIMA có phần dư gần với nhiễu trắng hơn
-
-### 6. File Log: `evaluation.log`
-
-Kết quả đánh giá trên tập test:
-
-```
-=== Evaluation for: ARIMA(2, 2, 1) ===
-MAE: 3.636
-RMSE: 4.300
-MAPE: 21.51%
-
-=== Evaluation for: SARIMA(1, 1, 1)x(1, 1, 1, 12) ===
-MAE: 1.995
-RMSE: 2.466
-MAPE: 11.55%
-```
-
-**Phân tích**:
-- **MAE**: SARIMA giảm 45% (từ 3.64 → 1.99)
-- **RMSE**: SARIMA giảm 43% (từ 4.30 → 2.47)
-- **MAPE**: SARIMA giảm 46% (từ 21.51% → 11.55%)
-- **Kết luận**: SARIMA dự báo chính xác hơn đáng kể trên mọi chỉ số
-
-### 7. File Báo Cáo: `stationarity_test_YYYYMMDD_HHMMSS.txt`
-
-Báo cáo chi tiết về kiểm định tính dừng:
+### Nội Dung Báo Cáo
 
 ```
 Stationarity Test Results (Augmented Dickey-Fuller Test)
 ============================================================
 Original data length: 204
-Date range: 1991-07-01 to 2008-06-01
+Date range: 1991-07-01 00:00:00 to 2008-06-01 00:00:00
+
+============================================================
+TEST RESULTS FOR DIFFERENT DIFFERENCING ORDERS
+============================================================
 
 Differencing Order d = 0 (Original):
   ADF Statistic: 3.1452
   p-value: 1.0000
+  Critical Values:
+    1%: -3.4656
+    5%: -2.8770
+    10%: -2.5750
   Stationary: No (p-value >= 0.05)
+  Number of observations: 204
 
-Differencing Order d = 1:
+Differencing Order d = 1 (Differenced 1 time):
   ADF Statistic: -2.4952
   p-value: 0.1167
+  Critical Values:
+    1%: -3.4658
+    5%: -2.8771
+    10%: -2.5751
   Stationary: No (p-value >= 0.05)
+  Number of observations: 203
 
-Differencing Order d = 2:
+Differencing Order d = 2 (Differenced 2 times):
   ADF Statistic: -10.2923
   p-value: 0.0000
+  Critical Values:
+    1%: -3.4658
+    5%: -2.8771
+    10%: -2.5751
   Stationary: Yes (p-value < 0.05) ✓
+  Number of observations: 202
 
+============================================================
 Suggested Differencing Order (d): 2
 ```
 
-**Phân tích**: Báo cáo này cung cấp đầy đủ thông tin về quá trình kiểm định, giúp người đọc hiểu rõ lý do chọn `d=2`.
+### Phân Tích Chi Tiết
 
-### 8. File Báo Cáo: `ACF_PACF_Analysis_YYYYMMDD_HHMMSS.txt`
+#### **Bước 1: Kiểm định chuỗi gốc (d = 0)**
 
-Báo cáo phân tích ACF/PACF:
+| Chỉ Số | Giá Trị | Ý Nghĩa |
+|--------|---------|---------|
+| **ADF Statistic** | 3.1452 | Giá trị dương, rất xa các giá trị tới hạn âm |
+| **p-value** | 1.0000 | Cực kỳ cao → Không thể bác bỏ H0 |
+| **Critical Value (5%)** | -2.8770 | ADF Statistic (3.1452) > -2.8770 |
+| **Kết luận** | **Không dừng** | Chuỗi có unit root, cần sai phân |
+
+**Giải thích**: 
+- ADF Statistic dương và lớn cho thấy chuỗi có xu hướng tăng mạnh
+- p-value = 1.0 nghĩa là xác suất chuỗi dừng gần như bằng 0
+- **Quyết định**: Cần thực hiện sai phân
+
+#### **Bước 2: Kiểm định sau sai phân bậc 1 (d = 1)**
+
+| Chỉ Số | Giá Trị | Ý Nghĩa |
+|--------|---------|---------|
+| **ADF Statistic** | -2.4952 | Đã chuyển sang âm nhưng chưa đủ nhỏ |
+| **p-value** | 0.1167 | Vẫn > 0.05 → Chưa đạt ngưỡng ý nghĩa |
+| **Critical Value (5%)** | -2.8771 | ADF Statistic (-2.4952) > -2.8771 |
+| **Kết luận** | **Vẫn không dừng** | Cần sai phân thêm 1 lần nữa |
+
+**Giải thích**:
+- ADF Statistic đã âm nhưng chưa vượt qua ngưỡng -2.8771
+- p-value = 0.117 > 0.05 → Chưa đủ bằng chứng để kết luận chuỗi dừng
+- **Quyết định**: Cần sai phân bậc 2
+
+#### **Bước 3: Kiểm định sau sai phân bậc 2 (d = 2)**
+
+| Chỉ Số | Giá Trị | Ý Nghĩa |
+|--------|---------|---------|
+| **ADF Statistic** | -10.2923 | Rất âm, vượt xa tất cả giá trị tới hạn |
+| **p-value** | 0.0000 | Cực kỳ nhỏ (< 0.0001) |
+| **Critical Value (1%)** | -3.4658 | ADF Statistic (-10.29) << -3.47 |
+| **Critical Value (5%)** | -2.8771 | ADF Statistic (-10.29) << -2.88 |
+| **Kết luận** | **Dừng ✓** | Chuỗi đã đạt tính dừng |
+
+**Giải thích**:
+- ADF Statistic = -10.29 rất nhỏ, vượt xa cả ngưỡng 1% (-3.47)
+- p-value ≈ 0 → Bằng chứng mạnh mẽ để bác bỏ H0
+- **Quyết định cuối cùng**: Sử dụng **d = 2** cho mô hình ARIMA
+
+### Bảng Tổng Hợp So Sánh
+
+| Bậc Sai Phân | ADF Statistic | p-value | So với CV 5% | Kết Luận | Số Quan Sát |
+|--------------|---------------|---------|--------------|----------|-------------|
+| **d = 0** | 3.1452 | 1.0000 | > -2.8770 | ❌ Không dừng | 204 |
+| **d = 1** | -2.4952 | 0.1167 | > -2.8771 | ❌ Không dừng | 203 |
+| **d = 2** | **-10.2923** | **0.0000** | **<< -2.8771** | ✅ **Dừng** | 202 |
+
+### Kết Luận
+
+1. **Chuỗi gốc có xu hướng mạnh**: ADF Statistic dương (3.15) cho thấy xu hướng tăng rõ rệt
+2. **Sai phân bậc 1 chưa đủ**: Vẫn còn một phần xu hướng chưa được loại bỏ
+3. **Sai phân bậc 2 đạt tính dừng**: ADF Statistic = -10.29 cho thấy chuỗi đã hoàn toàn dừng
+4. **Mất 2 quan sát**: Mỗi lần sai phân làm mất 1 quan sát (204 → 203 → 202)
+
+---
+
+## 📈 2. Báo Cáo Phân Tích ACF/PACF: `ACF_PACF_Analysis_YYYYMMDD_HHMMSS.txt`
+
+### Nội Dung Báo Cáo
 
 ```
 ACF and PACF Analysis for ARIMA Model Selection
 ============================================================
 Data length: 202
+Date range: 1991-09-01 00:00:00 to 2008-06-01 00:00:00
+Mean: -0.02
+Std deviation: 3.71
+
+============================================================
+THRESHOLD SELECTION EXPLANATION
+============================================================
+Sample size (n): 202
+
 Confidence Interval Thresholds:
   90% CI threshold: ±0.1157
   95% CI threshold: ±0.1379 (used for analysis)
   99% CI threshold: ±0.1812
 
+Threshold Used: 0.1379
+
+Origin of Z-Score Values (1.65, 1.96, 2.58):
+  These are critical values (z-scores) from the Standard Normal Distribution:
+  - 1.65 ≈ z(0.95)  for 90% CI
+  - 1.96 ≈ z(0.975) for 95% CI
+  - 2.58 ≈ z(0.995) for 99% CI
+
+  Statistical Basis:
+  Under the null hypothesis (no autocorrelation),
+  ACF/PACF values follow approximately N(0, 1/√n)
+  CI = ±z_α/2 / √n
+
+============================================================
 Significant PACF lags (|PACF| > 0.1379) - for AR order:
   Lag 1: -0.6346
   Lag 2: -0.3673
   Lag 3: -0.3032
-  ...
+  Lag 4: -0.3189
+  Lag 5: -0.2062
+  Lag 6: -0.1817
+  Lag 7: -0.1527
+  Lag 10: 0.1872
 
+============================================================
 Significant ACF lags (|ACF| > 0.1379) - for MA order:
   Lag 1: -0.6346
-  Lag 2: -0.3673
-  ...
+  Lag 2: 0.1833
+  Lag 10: 0.1771
 
-Suggested ARIMA order: AR(2), I(2), MA(1)
+============================================================
+Suggested ARIMA order: AR(1), I(d), MA(1)
+Note: Differencing order (d) is determined separately using ADF test
 ```
 
-**Phân tích**: 
-- Giải thích rõ cách tính ngưỡng tin cậy dựa trên Z-score
-- Liệt kê tất cả các lag có ý nghĩa thống kê
-- Đưa ra gợi ý cụ thể về bậc mô hình
+### Phân Tích Chi Tiết
 
-### 9. File Báo Cáo: `z_table_YYYYMMDD_HHMMSS.txt`
+#### **A. Thông Tin Cơ Bản về Dữ Liệu**
 
-Bảng tra cứu Z-score và giải thích cơ sở toán học:
+| Thông Số | Giá Trị | Ý Nghĩa |
+|----------|---------|---------|
+| **Độ dài chuỗi** | 202 | Sau khi sai phân bậc 2 (từ 204) |
+| **Khoảng thời gian** | 1991-09 đến 2008-06 | ~17 năm dữ liệu |
+| **Trung bình** | -0.02 | Gần 0 → Chuỗi đã được chuẩn hóa tốt |
+| **Độ lệch chuẩn** | 3.71 | Độ biến thiên của chuỗi sau sai phân |
+
+#### **B. Ngưỡng Tin Cậy (Confidence Thresholds)**
+
+**Công thức tính**: `CI = ±z_(α/2) / √n`
+
+Với n = 202:
+- **90% CI**: ±1.645 / √202 = **±0.1157**
+- **95% CI**: ±1.960 / √202 = **±0.1379** ← **Sử dụng cho phân tích**
+- **99% CI**: ±2.576 / √202 = **±0.1812**
+
+**Giải thích**: 
+- Ngưỡng 95% được chọn vì cân bằng giữa độ chính xác và độ nhạy
+- Giá trị ACF/PACF vượt quá ±0.1379 được coi là có ý nghĩa thống kê
+
+#### **C. Phân Tích PACF (Partial Autocorrelation Function) - Xác định bậc AR (p)**
+
+**Các lag có ý nghĩa thống kê** (|PACF| > 0.1379):
+
+| Lag | PACF Value | |PACF| | Vượt Ngưỡng | Ý Nghĩa |
+|-----|------------|-------|-------------|----------|
+| **1** | -0.6346 | 0.6346 | ✅ Rất lớn | Tương quan trực tiếp mạnh với lag 1 |
+| **2** | -0.3673 | 0.3673 | ✅ Lớn | Tương quan trực tiếp với lag 2 |
+| **3** | -0.3032 | 0.3032 | ✅ Lớn | Tương quan trực tiếp với lag 3 |
+| **4** | -0.3189 | 0.3189 | ✅ Lớn | Tương quan trực tiếp với lag 4 |
+| **5** | -0.2062 | 0.2062 | ✅ Vừa | Tương quan trực tiếp với lag 5 |
+| **6** | -0.1817 | 0.1817 | ✅ Vừa | Tương quan trực tiếp với lag 6 |
+| **7** | -0.1527 | 0.1527 | ✅ Nhỏ | Tương quan trực tiếp với lag 7 |
+| **10** | 0.1872 | 0.1872 | ✅ Vừa | Tương quan trực tiếp với lag 10 |
+
+**Phân tích**:
+- **Lag 1 có giá trị tuyệt đối lớn nhất** (-0.63) → Gợi ý mạnh về AR(1)
+- **Lag 2 cũng rất lớn** (-0.37) → Có thể cần AR(2)
+- **Nhiều lag vượt ngưỡng** → Có thể cần mô hình AR phức tạp hơn
+- **Lag 10 có giá trị dương** (0.19) → Có thể liên quan đến tính mùa vụ
+
+**Gợi ý bậc AR (p)**: 
+- **p = 1**: Dựa trên lag 1 có giá trị lớn nhất
+- **p = 2**: Nếu muốn bắt được tương quan với lag 2
+
+#### **D. Phân Tích ACF (Autocorrelation Function) - Xác định bậc MA (q)**
+
+**Các lag có ý nghĩa thống kê** (|ACF| > 0.1379):
+
+| Lag | ACF Value | |ACF| | Vượt Ngưỡng | Ý Nghĩa |
+|-----|----------|-------|-------------|----------|
+| **1** | -0.6346 | 0.6346 | ✅ Rất lớn | Tương quan tổng thể mạnh với lag 1 |
+| **2** | 0.1833 | 0.1833 | ✅ Vừa | Tương quan tổng thể với lag 2 |
+| **10** | 0.1771 | 0.1771 | ✅ Vừa | Tương quan tổng thể với lag 10 |
+
+**Phân tích**:
+- **Lag 1 có giá trị tuyệt đối lớn nhất** (-0.63) → Gợi ý mạnh về MA(1)
+- **Lag 2 và 10 có giá trị vừa** → Có thể cần MA(2) hoặc có tính mùa vụ
+- **Ít lag vượt ngưỡng hơn PACF** → Mô hình MA đơn giản hơn
+
+**Gợi ý bậc MA (q)**:
+- **q = 1**: Dựa trên lag 1 có giá trị lớn nhất
+- **q = 2**: Nếu muốn bắt được tương quan với lag 2
+
+#### **E. Dấu Hiệu Tính Mùa Vụ**
+
+**Quan sát quan trọng**:
+- **Lag 10 và 12** (không hiển thị đầy đủ trong báo cáo nhưng có trong suggested_lags.log) xuất hiện trong cả ACF và PACF
+- Điều này gợi ý mạnh về **tính mùa vụ với chu kỳ 12 tháng**
+- **Kết luận**: Nên sử dụng **SARIMA** thay vì ARIMA đơn thuần
+
+### Bảng Tổng Hợp Gợi ý Mô Hình
+
+| Tham Số | Gợi ý từ PACF | Gợi ý từ ACF | Giá Trị Chọn | Lý Do |
+|---------|---------------|--------------|--------------|-------|
+| **p (AR)** | Lag 1, 2, 3, 4... | - | **1 hoặc 2** | Lag 1 và 2 có giá trị lớn nhất |
+| **d (I)** | - | - | **2** | Từ ADF test |
+| **q (MA)** | - | Lag 1, 2, 10 | **1 hoặc 2** | Lag 1 có giá trị lớn nhất |
+| **s (Seasonal)** | Lag 10, 12 | Lag 10, 12 | **12** | Dấu hiệu mùa vụ rõ rệt |
+
+**Mô hình đề xuất**:
+- **ARIMA(1, 2, 1)** hoặc **ARIMA(2, 2, 1)** - Mô hình cơ bản
+- **SARIMA(1, 2, 1)(1, 1, 1, 12)** - Mô hình có tính mùa vụ (khuyến nghị)
+
+---
+
+## 📐 3. Bảng Tra Cứu Z-Score: `z_table_YYYYMMDD_HHMMSS.txt`
+
+### Nội Dung Báo Cáo
 
 ```
+================================================================================
 STANDARD NORMAL DISTRIBUTION (Z-TABLE)
 Critical Values for ACF / PACF Confidence Intervals
 ================================================================================
@@ -514,23 +583,199 @@ sample ACF and PACF values are approximately distributed as:
 Confidence interval formula:
   CI = ± z_(α/2) / √n
 
+================================================================================
 COMMONLY USED CONFIDENCE LEVELS
+================================================================================
 Confidence Level      Two-Tailed α      Z-Score (zα/2)
 --------------------------------------------------------------------------------
-  90.0%                0.100            1.6449
-  95.0%                0.050            1.9600
-  99.0%                0.010            2.5758
+  80.0%              0.200               1.2816
+  85.0%              0.150               1.4395
+  90.0%              0.100               1.6449
+  95.0%              0.050               1.9600
+  99.0%              0.010               2.5758
+  99.9%              0.001               3.2905
 
+================================================================================
+DETAILED Z-TABLE (COMMON PERCENTILES)
+================================================================================
+Percentile      Z-Score      Confidence Level     Usage
+--------------------------------------------------------------------------------
+ 50.00%        0.0000      50%                 Median
+ 60.00%        0.2533      60%                 
+ 70.00%        0.5244      70%                 
+ 75.00%        0.6745      75%                 
+ 80.00%        0.8416      80%                 Common threshold
+ 85.00%        1.0364      85%                 
+ 90.00%        1.2816      90%                 Common threshold
+ 95.00%        1.6449      95%                 Very common
+ 97.50%        1.9600      97.5%               95% CI (two-tailed)
+ 99.00%        2.3263      99%                 Common threshold
+ 99.50%        2.5758      99.5%               99% CI (two-tailed)
+ 99.90%        3.0902      99.9%               High confidence
+ 99.95%        3.2905      99.95%              Very high confidence
+
+================================================================================
 APPLICATION TO YOUR DATASET
+================================================================================
 Sample size (n): 204
 
 Calculated confidence thresholds:
-  90% CI  : ±0.1157   (z = 1.645)
-  95% CI  : ±0.1379   (z = 1.96)  ← used for analysis
-  99% CI  : ±0.1812   (z = 2.576)
+  90% CI  : ±0.1152   (z = 1.645)
+  95% CI  : ±0.1372   (z = 1.96)  ← used for analysis
+  99% CI  : ±0.1803   (z = 2.576)
+
+Interpretation for ACF/PACF plots:
+- Any ACF or PACF value exceeding ±0.1372
+  is considered statistically significant.
+- Significant PACF lags suggest AR order (p).
+- Significant ACF lags suggest MA order (q).
+- Differencing order (d) is determined separately using ADF test.
 ```
 
-**Phân tích**: File này giải thích cơ sở toán học đằng sau việc chọn ngưỡng tin cậy, giúp người đọc hiểu tại sao sử dụng giá trị `±0.1379` cho phân tích.
+### Phân Tích Chi Tiết
+
+#### **A. Cơ Sở Toán Học**
+
+**Giả định thống kê**:
+- Dưới giả thuyết H0 (không có tự tương quan), các giá trị ACF/PACF mẫu tuân theo phân phối chuẩn:
+  ```
+  ACF/PACF ~ N(0, 1/√n)
+  ```
+
+**Công thức khoảng tin cậy**:
+```
+CI = ± z_(α/2) / √n
+```
+
+Trong đó:
+- `z_(α/2)`: Z-score từ phân phối chuẩn chuẩn hóa
+- `n`: Kích thước mẫu
+- `α`: Mức ý nghĩa (significance level)
+
+#### **B. Bảng Z-Score Phổ Biến**
+
+| Mức Tin Cậy | Two-Tailed α | Z-Score | Ứng Dụng |
+|-------------|--------------|---------|----------|
+| **80%** | 0.200 | 1.2816 | Ngưỡng thấp, ít sử dụng |
+| **85%** | 0.150 | 1.4395 | Ngưỡng trung bình |
+| **90%** | 0.100 | 1.6449 | Ngưỡng phổ biến |
+| **95%** | 0.050 | **1.9600** | **Rất phổ biến, tiêu chuẩn** |
+| **99%** | 0.010 | 2.5758 | Ngưỡng cao, nghiêm ngặt |
+| **99.9%** | 0.001 | 3.2905 | Ngưỡng rất cao |
+
+**Giải thích**:
+- **95% CI (z = 1.96)** là tiêu chuẩn vàng trong thống kê
+- Cân bằng giữa độ chính xác và khả năng phát hiện tương quan
+- Được sử dụng trong hầu hết các nghiên cứu khoa học
+
+#### **C. Bảng Chi Tiết Các Phân Vị**
+
+| Phân Vị | Z-Score | Mức Tin Cậy | Cách Sử Dụng |
+|---------|---------|-------------|--------------|
+| 50% | 0.0000 | 50% | Trung vị (median) |
+| 75% | 0.6745 | 75% | Phân vị thứ 3 |
+| 80% | 0.8416 | 80% | Ngưỡng thông thường |
+| 90% | 1.2816 | 90% | Ngưỡng thông thường |
+| **95%** | **1.6449** | **95%** | **Rất phổ biến** |
+| **97.5%** | **1.9600** | **97.5%** | **95% CI (two-tailed)** ← **Dùng cho ACF/PACF** |
+| 99% | 2.3263 | 99% | Ngưỡng thông thường |
+| 99.5% | 2.5758 | 99.5% | 99% CI (two-tailed) |
+| 99.9% | 3.0902 | 99.9% | Độ tin cậy cao |
+| 99.95% | 3.2905 | 99.95% | Độ tin cậy rất cao |
+
+**Lưu ý quan trọng**:
+- **97.5% percentile (z = 1.96)** được dùng cho **95% CI two-tailed**
+- Vì two-tailed test chia α thành 2 phần: α/2 ở mỗi đuôi
+- 95% CI two-tailed = 2.5% ở mỗi đuôi = 97.5% percentile
+
+#### **D. Áp Dụng Cho Dataset Cụ Thể**
+
+**Thông tin dataset**:
+- **Kích thước mẫu (n)**: 204 quan sát
+- **Công thức**: CI = ± z / √204 = ± z / 14.28
+
+**Bảng Ngưỡng Tin Cậy Tính Toán**:
+
+| Mức Tin Cậy | Z-Score | Ngưỡng Tính Toán | Ngưỡng Làm Tròn |
+|-------------|---------|------------------|-----------------|
+| 90% | 1.6449 | ±0.1152 | **±0.1157** |
+| **95%** | **1.9600** | **±0.1372** | **±0.1379** ← **Sử dụng** |
+| 99% | 2.5758 | ±0.1803 | **±0.1812** |
+
+**Giải thích**:
+- Ngưỡng **±0.1379** được sử dụng để xác định các lag có ý nghĩa thống kê
+- Bất kỳ giá trị ACF hoặc PACF nào vượt quá ngưỡng này đều được coi là có tương quan đáng kể
+- Ngưỡng này đảm bảo 95% độ tin cậy trong việc phát hiện tự tương quan
+
+#### **E. Ý Nghĩa Thực Tiễn**
+
+**Quy tắc sử dụng**:
+
+1. **Xác định bậc AR (p)**:
+   - Xem biểu đồ PACF
+   - Tìm lag đầu tiên mà giá trị PACF vượt quá ±0.1379
+   - Lag đó chính là bậc AR đề xuất
+
+2. **Xác định bậc MA (q)**:
+   - Xem biểu đồ ACF
+   - Tìm lag đầu tiên mà giá trị ACF vượt quá ±0.1379
+   - Lag đó chính là bậc MA đề xuất
+
+3. **Xác định tính mùa vụ**:
+   - Nếu có lag 12, 24, 36... vượt ngưỡng → Có tính mùa vụ
+   - Chu kỳ mùa vụ (s) = lag có giá trị cao nhất trong các lag mùa vụ
+
+**Ví dụ từ dataset**:
+- **PACF lag 1 = -0.6346** >> 0.1379 → Gợi ý AR(1) hoặc AR(2)
+- **ACF lag 1 = -0.6346** >> 0.1379 → Gợi ý MA(1)
+- **Lag 12 xuất hiện** → Gợi ý tính mùa vụ với s = 12
+
+### Kết Luận về Z-Table
+
+1. **Cơ sở toán học vững chắc**: Dựa trên phân phối chuẩn chuẩn hóa N(0,1)
+2. **Ngưỡng 95% CI là tiêu chuẩn**: Cân bằng giữa độ chính xác và độ nhạy
+3. **Áp dụng trực tiếp**: Ngưỡng ±0.1379 được tính toán cụ thể cho dataset này
+4. **Hướng dẫn rõ ràng**: Giúp xác định bậc mô hình một cách khoa học
+
+---
+
+## 📋 Tổng Kết 3 Báo Cáo
+
+### Quy Trình Xây Dựng Mô Hình Dựa Trên 3 Báo Cáo
+
+```
+1. stationarity_test.txt
+   ↓
+   Xác định d = 2 (sai phân bậc 2)
+
+2. z_table.txt
+   ↓
+   Tính ngưỡng tin cậy ±0.1379 (95% CI)
+
+3. ACF_PACF_Analysis.txt
+   ↓
+   Xác định p và q dựa trên ngưỡng
+   ↓
+   Kết quả: ARIMA(1,2,1) hoặc ARIMA(2,2,1)
+   + Phát hiện tính mùa vụ → SARIMA(1,2,1)(1,1,1,12)
+```
+
+### Bảng Tổng Hợp Quyết Định
+
+| Tham Số | Nguồn Xác Định | Giá Trị | Báo Cáo Tham Khảo |
+|---------|----------------|---------|-------------------|
+| **d** | ADF Test | **2** | `stationarity_test.txt` |
+| **Ngưỡng CI** | Z-Table | **±0.1379** | `z_table.txt` |
+| **p** | PACF Analysis | **1 hoặc 2** | `ACF_PACF_Analysis.txt` |
+| **q** | ACF Analysis | **1** | `ACF_PACF_Analysis.txt` |
+| **s** | ACF/PACF lag 12 | **12** | `ACF_PACF_Analysis.txt` |
+
+### Mô Hình Cuối Cùng
+
+Dựa trên 3 báo cáo, mô hình được đề xuất:
+
+1. **ARIMA(2, 2, 1)**: Mô hình cơ bản, bỏ qua tính mùa vụ
+2. **SARIMA(1, 2, 1)(1, 1, 1, 12)**: Mô hình đầy đủ, bao gồm tính mùa vụ ⭐ **Khuyến nghị**
 
 ---
 
