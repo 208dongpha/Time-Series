@@ -1,0 +1,91 @@
+================================================================================
+STANDARD NORMAL DISTRIBUTION (Z-TABLE)
+Critical Values (Z-Scores) for Confidence Intervals
+================================================================================
+
+This table shows z-scores (critical values) from the standard normal distribution.
+These values are used to calculate confidence intervals for ACF/PACF analysis.
+
+Formula: CI = ±z_α/2 / √n
+where z_α/2 is the critical value from this table.
+
+================================================================================
+COMMONLY USED CONFIDENCE LEVELS
+================================================================================
+Confidence Level          Two-Tailed α         Z-Score (z_α/2)     
+--------------------------------------------------------------------------------
+  80.0%                   0.200                    1.2816
+  85.0%                   0.150                    1.4395
+  90.0%                   0.100                    1.6449
+  95.0%                   0.050                    1.9600
+  99.0%                   0.010                    2.5758
+  99.9%                   0.001                    3.2905
+
+================================================================================
+DETAILED Z-TABLE (Common Percentiles)
+================================================================================
+Percentile      Z-Score         Confidence Level     Usage                         
+--------------------------------------------------------------------------------
+ 50.00%             0.0000  50%                  Median                        
+ 60.00%             0.2533  60%                                                
+ 70.00%             0.5244  70%                                                
+ 75.00%             0.6745  75%                                                
+ 80.00%             0.8416  80%                  Common threshold              
+ 85.00%             1.0364  85%                                                
+ 90.00%             1.2816  90%                  Common threshold              
+ 95.00%             1.6449  95%                  Very common                   
+ 97.50%             1.9600  97.5%                95% CI (two-tailed)           
+ 99.00%             2.3263  99%                  Common threshold              
+ 99.50%             2.5758  99.5%                99% CI (two-tailed)           
+ 99.90%             3.0902  99.9%                High confidence               
+ 99.95%             3.2905  99.95%               Very high confidence          
+
+================================================================================
+HOW TO USE THIS TABLE
+================================================================================
+1. For ACF/PACF analysis, use the 'Two-Tailed' z-scores:
+   - 90% CI: Use z = 1.645 (or approximately 1.65)
+   - 95% CI: Use z = 1.960 (or approximately 1.96) - MOST COMMON
+   - 99% CI: Use z = 2.576 (or approximately 2.58)
+
+2. Calculate threshold for your sample:
+   threshold = z_score / √n
+   where n is your sample size
+
+3. Example:
+   For n = 100 and 95% confidence:
+   threshold = 1.96 / √100 = 1.96 / 10 = 0.196 ≈ 0.2
+
+4. Interpretation:
+   - If |ACF| or |PACF| > threshold, the autocorrelation is significant
+   - Values beyond ±threshold indicate statistical significance
+
+================================================================================
+REFERENCE VALUES FOR COMMON SAMPLE SIZES
+================================================================================
+Thresholds for 95% Confidence Interval (z = 1.96):
+
+Sample Size (n)      Threshold (1.96/√n)      
+--------------------------------------------------------------------------------
+10                       0.6198
+25                       0.3920
+50                       0.2772
+100                      0.1960
+200                      0.1386
+365                      0.1026
+500                      0.0877
+1000                     0.0620
+2000                     0.0438
+3650                     0.0324
+
+================================================================================
+NOTES
+================================================================================
+- This table is based on the Standard Normal Distribution N(0,1)
+- For two-tailed tests, use the z_α/2 values
+- For one-tailed tests, use the z_α values
+- These values assume large sample sizes (n > 30)
+- For small samples, consider using t-distribution instead
+
+Generated: 2025-12-20 08:49:00
+================================================================================

@@ -1,0 +1,29 @@
+Stationarity Test Results (Augmented Dickey-Fuller Test)
+============================================================
+Original data length: 3650
+Date range: 1981-01-01 00:00:00 to 1990-12-31 00:00:00
+
+============================================================
+TEST RESULTS FOR DIFFERENT DIFFERENCING ORDERS
+============================================================
+
+Differencing Order d = 0 (Original):
+  ADF Statistic: -4.4448
+  p-value: 0.0002
+  Critical Values:
+    1%: -3.4322
+    5%: -2.8623
+    10%: -2.5672
+  Stationary: Yes (p-value < 0.05)
+  Number of observations: 3650
+
+============================================================
+Suggested Differencing Order (d): 0
+
+Interpretation:
+  - H0 (null hypothesis): Series has a unit root (non-stationary)
+  - H1 (alternative): Series is stationary
+  - If p-value < 0.05: Reject H0, series is stationary
+  - If p-value >= 0.05: Fail to reject H0, series is non-stationary
+
+============================================================

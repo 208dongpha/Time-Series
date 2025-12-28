@@ -1,0 +1,80 @@
+ACF and PACF Analysis for ARIMA Model Selection
+============================================================
+Data length: 3650
+Date range: 1981-01-01 00:00:00 to 1990-12-31 00:00:00
+Temperature range: 0.00°C to 26.30°C
+Mean temperature: 11.18°C
+Std deviation: 4.07°C
+
+============================================================
+THRESHOLD SELECTION EXPLANATION
+============================================================
+Sample size (n): 3650
+
+Confidence Interval Thresholds:
+  90% CI threshold: ±0.0273
+  95% CI threshold: ±0.0324 (used for analysis)
+  99% CI threshold: ±0.0427
+
+Threshold Used: 0.0324
+
+Origin of Z-Score Values (1.65, 1.96, 2.58):
+  These are critical values (z-scores) from the Standard Normal Distribution:
+  - 1.65 ≈ z(0.95) for 90% CI: P(-1.65 < Z < 1.65) = 0.90
+    Meaning: 90% of values fall within ±1.65 standard deviations
+  - 1.96 ≈ z(0.975) for 95% CI: P(-1.96 < Z < 1.96) = 0.95
+    Meaning: 95% of values fall within ±1.96 standard deviations
+    This is the most commonly used confidence level in statistics
+  - 2.58 ≈ z(0.995) for 99% CI: P(-2.58 < Z < 2.58) = 0.99
+    Meaning: 99% of values fall within ±2.58 standard deviations
+
+  Statistical Basis:
+  Under the null hypothesis (no autocorrelation), ACF/PACF values follow
+  approximately N(0, 1/√n) distribution. The confidence interval formula is:
+  CI = ±z_α/2 / √n
+  where z_α/2 is the critical value from standard normal distribution.
+
+  These values can be found in:
+  - Standard statistical z-tables
+  - Using Python: from scipy.stats import norm; norm.ppf(0.975) ≈ 1.96
+  - Using R: qnorm(0.975) ≈ 1.96
+
+ARIMA Model Selection Guidelines:
+  - AR order (p): Determined from PACF - look for cutoff point
+  - MA order (q): Determined from ACF - look for cutoff point
+  - Differencing order (d): Determined from stationarity tests (ADF test)
+  - If both ACF and PACF tail off gradually, ARIMA model is appropriate
+  - Values beyond ±threshold indicate statistical significance
+
+============================================================
+Significant PACF lags (|PACF| > 0.0324) - for AR order:
+  Lag 1: 0.7745
+  Lag 2: 0.0770
+  Lag 3: 0.1894
+  Lag 4: 0.1521
+  Lag 5: 0.1299
+  Lag 6: 0.1096
+  Lag 7: 0.1033
+  Lag 8: 0.0745
+  Lag 9: 0.0703
+  Lag 10: 0.0355
+
+============================================================
+Significant ACF lags (|ACF| > 0.0324) - for MA order:
+  Lag 1: 0.7743
+  Lag 2: 0.6303
+  Lag 3: 0.5853
+  Lag 4: 0.5777
+  Lag 5: 0.5773
+  Lag 6: 0.5751
+  Lag 7: 0.5744
+  Lag 8: 0.5678
+  Lag 9: 0.5612
+  Lag 10: 0.5467
+
+============================================================
+Suggested ARIMA order: AR(1), I(d), MA(1)
+Note: Differencing order (d) is determined separately using ADF test
+
+Note: Visual inspection of ACF/PACF plots is recommended to confirm
+      the cutoff points and validate the model order selection.
