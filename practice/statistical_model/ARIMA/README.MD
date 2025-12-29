@@ -155,6 +155,9 @@ def adf_test(ts: pd.Series, d: int = 0):
 - Nếu `p-value < 0.05`: Bác bỏ H0 → Chuỗi dừng
 
 **Kết quả từ log**:
+
+![alt text]({FB33DAF9-E35D-4024-B34B-3F1F135C9D05}.png)
+
 ```
 d=0: p-value = 1.0 > 0.05 → Không dừng
 d=1: p-value = 0.117 > 0.05 → Không dừng  
