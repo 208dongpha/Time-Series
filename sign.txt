@@ -1,0 +1,9 @@
+- ADF là kiểm định thống kê dùng để xác định chuỗi thời gian (time series) có tính dừng (stationary) hay không.
+- AIC đo mức độ phù hợp của mô hình với dữ liệu kèm theo hình phạt cho độ phức tạp của mô hình.
+- BIC tương tự AIC nhưng phạt mô hình phức tạp mạnh hơn, đặc biệt khi dữ liệu lớn.
+- MAE đo sai số tuyệt đối trung bình giữa giá trị dự đoán và giá trị thực.
+- RMSE là căn bậc hai của MSE, phạt sai số lớn rất mạnh.
+- MAPE đo sai số phần trăm trung bình.
+- Residual mean	Bias (lệch trung bình)
+- Residual std	Độ lớn & độ ổn định sai số
+- Confidence threshold (ngưỡng độ tin cậy) là một giá trị ngưỡng dùng để quyết định có chấp nhận kết quả dự đoán của mô hình hay không
