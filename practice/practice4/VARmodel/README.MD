@@ -80,12 +80,7 @@ Trong log gần nhất, các chỉ số được ghi ở cuối file trong `logs
 - Residuals phân bố quanh 0, không bị lệch mạnh.
 - Vẫn còn các cụm sai số lớn → mô hình chưa bắt được các biến động bất thường.
 
-## 7. Gợi ý cải thiện
-
-- Thử chọn lag bằng BIC hoặc dùng cross-validation theo thời gian.
-- Thử VARMAX / SARIMAX nếu muốn thêm yếu tố mùa vụ.
-- So sánh với XGBoost/LSTM theo yêu cầu của Practice 4.
 
 ---
 
-Nếu cần mình bổ sung phần so sánh với XGBoost/LSTM hoặc export bảng AIC ra CSV, nói mình biết nhé.
+
