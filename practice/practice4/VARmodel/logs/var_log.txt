@@ -1,0 +1,107 @@
+2026-01-17 12:29:34,413 - VAR - Data loaded successfully
+2026-01-17 12:29:34,413 - VAR - Shape: (8736, 4)
+2026-01-17 12:29:34,413 - VAR - Columns: ['load', 'temp', 'humidity', 'wind_speed']
+2026-01-17 12:29:34,416 - VAR - StandardScaler applied to all variables
+2026-01-17 12:29:34,417 - VAR - Train: 6988, Test: 1748
+2026-01-17 12:29:34,418 - VAR - ===== ADF TEST =====
+2026-01-17 12:29:34,706 - VAR - ADF p-value (load): 0.0000
+2026-01-17 12:29:34,982 - VAR - ADF p-value (temp): 0.0545
+2026-01-17 12:29:35,265 - VAR - ADF p-value (humidity): 0.0000
+2026-01-17 12:29:35,542 - VAR - ADF p-value (wind_speed): 0.0000
+2026-01-17 12:29:35,543 - VAR - Applying first-order differencing
+2026-01-17 12:29:35,544 - VAR - Applying first-order differencing
+2026-01-17 12:29:36,488 - VAR - Best lag selected by AIC: 24
+2026-01-17 12:29:36,551 - VAR - VAR model trained successfully
+2026-01-17 12:29:36,853 - VAR - Prediction plot saved to c:\Users\Admin\Desktop\timeseries\practice\practice4\VARmodel\images\var_prediction.png
+2026-01-17 12:29:36,990 - VAR - Residuals plot saved to c:\Users\Admin\Desktop\timeseries\practice\practice4\VARmodel\images\var_residuals.png
+2026-01-17 12:29:37,006 - VAR - ===== VAR EVALUATION =====
+2026-01-17 12:29:37,007 - VAR - RMSE: 0.7864
+2026-01-17 12:29:37,008 - VAR - MAE : 0.6662
+2026-01-17 12:29:37,008 - VAR - MAPE: 1082.56%
+2026-01-17 12:31:08,931 - VAR - Data loaded successfully
+2026-01-17 12:31:08,931 - VAR - Shape: (8736, 4)
+2026-01-17 12:31:08,932 - VAR - Columns: ['load', 'temp', 'humidity', 'wind_speed']
+2026-01-17 12:31:08,935 - VAR - StandardScaler applied to all variables
+2026-01-17 12:31:08,935 - VAR - Train: 6988, Test: 1748
+2026-01-17 12:31:08,936 - VAR - ===== ADF TEST =====
+2026-01-17 12:31:09,227 - VAR - ADF p-value (load): 0.0000
+2026-01-17 12:31:09,544 - VAR - ADF p-value (temp): 0.0545
+2026-01-17 12:31:09,814 - VAR - ADF p-value (humidity): 0.0000
+2026-01-17 12:31:10,087 - VAR - ADF p-value (wind_speed): 0.0000
+2026-01-17 12:31:10,088 - VAR - Applying first-order differencing
+2026-01-17 12:31:10,089 - VAR - Applying first-order differencing
+2026-01-17 12:31:10,100 - VAR - AIC (lag=1): -14.101470
+2026-01-17 12:31:10,114 - VAR - AIC (lag=2): -14.215629
+2026-01-17 12:31:10,131 - VAR - AIC (lag=3): -14.233873
+2026-01-17 12:31:10,147 - VAR - AIC (lag=4): -14.274670
+2026-01-17 12:31:10,165 - VAR - AIC (lag=5): -14.298974
+2026-01-17 12:31:10,184 - VAR - AIC (lag=6): -14.323202
+2026-01-17 12:31:10,204 - VAR - AIC (lag=7): -14.380335
+2026-01-17 12:31:10,226 - VAR - AIC (lag=8): -14.464949
+2026-01-17 12:31:10,249 - VAR - AIC (lag=9): -14.544790
+2026-01-17 12:31:10,274 - VAR - AIC (lag=10): -14.626724
+2026-01-17 12:31:10,299 - VAR - AIC (lag=11): -14.668031
+2026-01-17 12:31:10,329 - VAR - AIC (lag=12): -14.702336
+2026-01-17 12:31:10,359 - VAR - AIC (lag=13): -14.731412
+2026-01-17 12:31:10,391 - VAR - AIC (lag=14): -14.751899
+2026-01-17 12:31:10,426 - VAR - AIC (lag=15): -14.763113
+2026-01-17 12:31:10,462 - VAR - AIC (lag=16): -14.769050
+2026-01-17 12:31:10,501 - VAR - AIC (lag=17): -14.795387
+2026-01-17 12:31:10,541 - VAR - AIC (lag=18): -14.872514
+2026-01-17 12:31:10,585 - VAR - AIC (lag=19): -14.998276
+2026-01-17 12:31:10,625 - VAR - AIC (lag=20): -15.129222
+2026-01-17 12:31:10,668 - VAR - AIC (lag=21): -15.286214
+2026-01-17 12:31:10,711 - VAR - AIC (lag=22): -15.535513
+2026-01-17 12:31:10,762 - VAR - AIC (lag=23): -15.561953
+2026-01-17 12:31:10,812 - VAR - AIC (lag=24): -16.492571
+2026-01-17 12:31:11,049 - VAR - Best lag selected by AIC: 24
+2026-01-17 12:31:11,115 - VAR - VAR model trained successfully
+2026-01-17 12:31:11,380 - VAR - Prediction plot saved to c:\Users\Admin\Desktop\timeseries\practice\practice4\VARmodel\images\var_prediction.png
+2026-01-17 12:31:11,524 - VAR - Residuals plot saved to c:\Users\Admin\Desktop\timeseries\practice\practice4\VARmodel\images\var_residuals.png
+2026-01-17 12:31:11,536 - VAR - ===== VAR EVALUATION =====
+2026-01-17 12:31:11,538 - VAR - RMSE: 0.7864
+2026-01-17 12:31:11,539 - VAR - MAE : 0.6662
+2026-01-17 12:31:11,539 - VAR - MAPE: 1082.56%
+2026-01-17 12:40:08,938 - VAR - Data loaded successfully
+2026-01-17 12:40:08,939 - VAR - Shape: (8736, 4)
+2026-01-17 12:40:08,939 - VAR - Columns: ['load', 'temp', 'humidity', 'wind_speed']
+2026-01-17 12:40:08,942 - VAR - StandardScaler applied to all variables
+2026-01-17 12:40:08,943 - VAR - Train: 6115, Val: 1310, Test: 1311
+2026-01-17 12:40:08,943 - VAR - ===== ADF TEST =====
+2026-01-17 12:40:09,167 - VAR - ADF p-value (load): 0.0000
+2026-01-17 12:40:09,387 - VAR - ADF p-value (temp): 0.1219
+2026-01-17 12:40:09,600 - VAR - ADF p-value (humidity): 0.0000
+2026-01-17 12:40:09,804 - VAR - ADF p-value (wind_speed): 0.0000
+2026-01-17 12:40:09,804 - VAR - Applying first-order differencing
+2026-01-17 12:40:09,817 - VAR - AIC (lag=1): -14.005347
+2026-01-17 12:40:09,830 - VAR - AIC (lag=2): -14.114307
+2026-01-17 12:40:09,844 - VAR - AIC (lag=3): -14.131990
+2026-01-17 12:40:09,858 - VAR - AIC (lag=4): -14.171620
+2026-01-17 12:40:09,874 - VAR - AIC (lag=5): -14.196153
+2026-01-17 12:40:09,891 - VAR - AIC (lag=6): -14.218018
+2026-01-17 12:40:09,908 - VAR - AIC (lag=7): -14.273623
+2026-01-17 12:40:09,927 - VAR - AIC (lag=8): -14.353864
+2026-01-17 12:40:09,947 - VAR - AIC (lag=9): -14.434011
+2026-01-17 12:40:09,970 - VAR - AIC (lag=10): -14.517412
+2026-01-17 12:40:09,993 - VAR - AIC (lag=11): -14.559181
+2026-01-17 12:40:10,019 - VAR - AIC (lag=12): -14.591067
+2026-01-17 12:40:10,045 - VAR - AIC (lag=13): -14.627498
+2026-01-17 12:40:10,074 - VAR - AIC (lag=14): -14.647370
+2026-01-17 12:40:10,103 - VAR - AIC (lag=15): -14.659212
+2026-01-17 12:40:10,135 - VAR - AIC (lag=16): -14.666775
+2026-01-17 12:40:10,168 - VAR - AIC (lag=17): -14.695199
+2026-01-17 12:40:10,201 - VAR - AIC (lag=18): -14.778268
+2026-01-17 12:40:10,236 - VAR - AIC (lag=19): -14.909015
+2026-01-17 12:40:10,272 - VAR - AIC (lag=20): -15.039867
+2026-01-17 12:40:10,311 - VAR - AIC (lag=21): -15.187798
+2026-01-17 12:40:10,350 - VAR - AIC (lag=22): -15.419902
+2026-01-17 12:40:10,391 - VAR - AIC (lag=23): -15.443346
+2026-01-17 12:40:10,436 - VAR - AIC (lag=24): -16.370564
+2026-01-17 12:40:10,670 - VAR - Best lag selected by AIC: 24
+2026-01-17 12:40:10,736 - VAR - VAR model trained successfully
+2026-01-17 12:40:11,928 - VAR - Prediction plot saved to c:\Users\Admin\Desktop\timeseries\practice\practice4\VARmodel\images\var_prediction.png
+2026-01-17 12:40:12,089 - VAR - Residuals plot saved to c:\Users\Admin\Desktop\timeseries\practice\practice4\VARmodel\images\var_residuals.png
+2026-01-17 12:40:12,106 - VAR - ===== VAR EVALUATION =====
+2026-01-17 12:40:12,108 - VAR - RMSE: 4439.4564
+2026-01-17 12:40:12,108 - VAR - MAE : 4001.4984
+2026-01-17 12:40:12,108 - VAR - MAPE: 14.08%
