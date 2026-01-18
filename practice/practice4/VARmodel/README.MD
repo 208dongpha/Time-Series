@@ -79,8 +79,3 @@ Trong log gần nhất, các chỉ số được ghi ở cuối file trong `logs
 ### `var_residuals.png`
 - Residuals phân bố quanh 0, không bị lệch mạnh.
 - Vẫn còn các cụm sai số lớn → mô hình chưa bắt được các biến động bất thường.
-
-
----
-
-

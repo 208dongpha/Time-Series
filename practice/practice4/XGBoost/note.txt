@@ -1,0 +1,59 @@
+load_data(file_path)
+
+Mục đích:
+Đọc dữ liệu từ file CSV, xử lý cột thời gian và sắp xếp dữ liệu theo đúng thứ tự chuỗi thời gian.
+
+standardize_data(df)
+
+Mục đích:
+Chuẩn hóa các biến đầu vào về cùng thang đo nhằm giúp mô hình XGBoost huấn luyện ổn định và hiệu quả hơn.
+
+create_feature(df, lags=24)
+
+Mục đích:
+Tạo các đặc trưng trễ (lag features) cho từng biến nhằm giúp mô hình học được mối quan hệ phụ thuộc theo thời gian.
+
+create_rolling(df)
+
+Mục đích:
+Tạo các đặc trưng thống kê (rolling mean, rolling std, xu hướng) để mô hình nắm bắt xu hướng và biến động ngắn hạn của phụ tải.
+
+prepare_features(df)
+
+Mục đích:
+Kết hợp toàn bộ đặc trưng lag, rolling và tạo biến mục tiêu để xây dựng bộ dữ liệu hoàn chỉnh cho huấn luyện mô hình.
+
+split(df, train_ratio=0.7, val_ratio=0.15)
+
+Mục đích:
+Chia dữ liệu thành tập huấn luyện, tập xác thực và tập kiểm tra theo thứ tự thời gian.
+
+split_xy(df)
+
+Mục đích:
+Tách dữ liệu thành đặc trưng đầu vào (X) và biến mục tiêu (y) phục vụ cho quá trình huấn luyện và dự báo.
+
+train_model(X_train, y_train, X_val, y_val)
+
+Mục đích:
+Huấn luyện mô hình XGBoost trên tập huấn luyện và theo dõi hiệu suất trên tập xác thực.
+
+inverse_scale_load(series, scaler, load_index)
+
+Mục đích:
+Chuyển giá trị dự báo của phụ tải từ không gian chuẩn hóa về giá trị thực ban đầu.
+
+plot_prediction(actual, predicted, images_dir, suffix="test")
+
+Mục đích:
+Trực quan hóa kết quả dự báo của mô hình so với giá trị thực tế.
+
+plot_residuals(actual, predicted, images_dir, suffix="test")
+
+Mục đích:
+Trực quan hóa sai số dự báo để đánh giá độ ổn định và bias của mô hình.
+
+evaluate(y_true, y_pred)
+
+Mục đích:
+Đánh giá hiệu suất mô hình thông qua các chỉ số sai số phổ biến như RMSE, MAE và MAPE.

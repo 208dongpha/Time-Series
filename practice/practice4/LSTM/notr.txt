@@ -1,0 +1,52 @@
+load_data()
+
+→ Đọc dữ liệu CSV, chuyển Datetime sang dạng thời gian, sắp xếp theo thứ tự thời gian để dùng cho chuỗi thời gian.
+
+standardize_data()
+
+→ Chuẩn hóa các biến về cùng thang đo (mean = 0, std = 1) giúp LSTM học ổn định và hội tụ nhanh hơn.
+
+create_sequence()
+
+→ Chuyển dữ liệu 2D thành tensor 3D (samples, 24 bước thời gian, 4 biến) để làm đầu vào cho LSTM và tạo nhãn dự báo load(t+1).
+
+split_timeseries()
+
+→ Chia dữ liệu train/validation/test theo thứ tự thời gian (không xáo trộn).
+
+create_dataloader()
+
+→ Tạo DataLoader để huấn luyện LSTM theo mini-batch.
+
+LSTMModel
+
+→ Mô hình LSTM gồm:
+LSTM(64) → LSTM(32) → Dense(1) dùng để dự báo tải điện tại bước thời gian tiếp theo.
+
+train()
+
+→ Huấn luyện mô hình LSTM, theo dõi Train MSE và Validation MSE qua từng epoch để kiểm soát overfitting.
+
+predict()
+
+→ Dự báo giá trị tải điện trên tập test bằng mô hình đã huấn luyện.
+
+inverse_scale_load()
+
+→ Chuyển kết quả dự báo từ dữ liệu chuẩn hóa về giá trị tải điện thực.
+
+plot_prediction()
+
+→ Vẽ đồ thị so sánh giữa giá trị thực và giá trị dự báo của LSTM.
+
+plot_loss()
+
+→ Trực quan quá trình học của mô hình (train loss và validation loss).
+
+evaluate()
+
+→ Đánh giá mô hình bằng các chỉ số: RMSE, MAE, MAPE.
+
+main()
+
+→ Điều phối toàn bộ quy trình: đọc dữ liệu → tiền xử lý → tạo sequence → huấn luyện → dự báo → đánh giá → trực quan hóa.

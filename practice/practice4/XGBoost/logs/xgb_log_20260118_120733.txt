@@ -1,0 +1,8 @@
+2026-01-18 12:07:33,670 - XGBOOST - Data loaded successfully
+2026-01-18 12:07:33,671 - XGBOOST - Shape: (8736, 4)
+2026-01-18 12:07:33,671 - XGBOOST - Columns: ['load', 'temp', 'humidity', 'wind_speed']
+2026-01-18 12:07:33,675 - XGBOOST - StandardScaler applied to all variables
+2026-01-18 12:07:33,703 - XGBOOST - Lag features created (window=24)
+2026-01-18 12:07:33,713 - XGBOOST - Rolling features created
+2026-01-18 12:07:33,721 - XGBOOST - Final feature shape: (8710, 104)
+2026-01-18 12:07:33,722 - XGBOOST - Train: 6097, Val: 1306, Test: 1307

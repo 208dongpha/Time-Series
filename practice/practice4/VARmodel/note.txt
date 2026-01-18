@@ -1,0 +1,67 @@
+1. Các hàm tiền xử lý dữ liệu (Preprocessing)
+load_data(file_path):
+
+Mục đích: Đọc tệp CSV, chuyển cột thời gian sang định dạng datetime chuẩn của Python và đặt nó làm chỉ số (Index). Việc sắp xếp (sort_index) đảm bảo dữ liệu luôn đi theo đúng trình tự thời gian từ quá khứ đến tương lai.
+
+standardize_data(df):
+
+Mục đích: Đưa các biến (load, temp,...) về cùng một thang đo (trung bình = 0, độ lệch chuẩn = 1).
+
+Tại sao cần?: Các mô hình như VAR nhạy cảm với đơn vị đo. Nếu không chuẩn hóa, biến có giá trị lớn (như load ~ 30,000) sẽ "lấn át" các biến nhỏ (như wind_speed ~ 0.1), làm mô hình dự báo sai.
+
+split_time(df, train_ratio, val_ratio):
+
+Mục đích: Chia dữ liệu thành 3 tập: Train (Huấn luyện), Val (Kiểm chứng), Test (Kiểm tra cuối cùng).
+
+Thông số: 70% Train - 15% Val - 15% Test. Lưu ý quan trọng: Không được xáo trộn (shuffle=False) vì trong chuỗi thời gian, thứ tự là yếu tố sống còn.
+
+2. Kiểm tra tính dừng và Sai phân (Stationarity & Differencing)
+adf_test(series, name):
+
+Thông số: Trả về p-value. Nếu p-value < 0.05, dữ liệu được coi là "Dừng" (ổn định về mặt thống kê).
+
+adf_check_all(df, max_d):
+
+Mục đích: Tự động kiểm tra tính dừng cho tất cả các biến. Nếu có biến chưa dừng, nó sẽ tự động thực hiện Sai phân bậc 1 (diff()).
+
+Tại sao?: Mô hình VAR yêu cầu dữ liệu phải dừng để các tham số dự báo không bị sai lệch theo thời gian.
+
+3. Xây dựng và Huấn luyện mô hình (Modeling)
+var_lag(train_diff, max_lag):
+
+Thông số: AIC (Akaike Information Criterion).
+
+Mục đích: Tìm xem nên nhìn lại bao nhiêu giờ trong quá khứ là tốt nhất. AIC thấp nhất tại lag=24 nghĩa là dùng 24 giờ trước đó để dự báo giờ tiếp theo là tối ưu nhất.
+
+walk_forward_forecast(model, history, test_diff):
+
+Mục đích: Đây là "trái tim" của phần dự báo. Thay vì dự báo một lèo từ đầu đến cuối tập Test, nó thực hiện: Dự báo 1 bước -> Lấy giá trị thực tế của bước đó đắp vào lịch sử -> Dự báo bước tiếp theo.
+
+Ưu điểm: Giống thực tế nhất (mỗi ngày ta đều có thêm dữ liệu mới) và hạn chế tối đa việc sai số bị cộng dồn.
+
+4. Hoàn nguyên và Đánh giá (Post-processing & Evaluation)
+invert_diff(train_original, forecast_diff):
+
+Mục đích: Chuyển dữ liệu từ dạng "sự thay đổi" (sai phân) về lại dạng giá trị Scaled ban đầu bằng cách cộng dồn (cumsum).
+
+inverse_scale_load(series, scaler, load_index):
+
+Mục đích: Đưa dữ liệu từ dạng Scaled (quanh mức 0) về lại đơn vị gốc (Watt/kWh). Đây là bước cực kỳ quan trọng để các chỉ số MAE, RMSE có ý nghĩa thực tế.
+
+evaluate_var(y_true, y_pred):
+
+Các thông số đánh giá:
+
+RMSE (Root Mean Squared Error): Sai số bình quân căn bậc hai. Phạt nặng các sai số lớn.
+
+MAE (Mean Absolute Error): Sai số tuyệt đối trung bình. Cho biết trung bình bạn dự báo lệch bao nhiêu đơn vị thực tế.
+
+MAPE (Mean Absolute Percentage Error): Sai số phần trăm. Con số dễ hiểu nhất (Ví dụ: 5% nghĩa là bạn dự báo đúng 95%).
+
+5. Trực quan hóa (Visualization)
+plot_prediction: Vẽ đồ thị so sánh đường Actual (Xanh) và Forecast (Đỏ).
+
+plot_residuals: Vẽ đồ thị Dư thừa (Sai số). Nếu dư thừa dao động ngẫu nhiên quanh mức 0, mô hình của bạn rất tốt.
+
+Tóm tắt luồng đi của dữ liệu trong Main:
+Dữ liệu thô -> 2. Chuẩn hóa -> 3. Sai phân -> 4. Tìm Lag tối ưu -> 5. Dự báo (Walk-forward) -> 6. Cộng dồn (Invert Diff) -> 7. Nghịch đảo chuẩn hóa -> 8. Tính sai số & Vẽ hình.

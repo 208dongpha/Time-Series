@@ -1,0 +1,22 @@
+2026-01-18 12:12:06,288 - XGBOOST - Log file: c:\Users\Admin\Desktop\timeseries\practice\practice4\XGBoost\logs\xgb_log_20260118_121206.txt
+2026-01-18 12:12:06,311 - XGBOOST - Data loaded successfully
+2026-01-18 12:12:06,311 - XGBOOST - Shape: (8736, 4)
+2026-01-18 12:12:06,311 - XGBOOST - Columns: ['load', 'temp', 'humidity', 'wind_speed']
+2026-01-18 12:12:06,315 - XGBOOST - StandardScaler applied to all variables
+2026-01-18 12:12:06,341 - XGBOOST - Lag features created (window=24)
+2026-01-18 12:12:06,355 - XGBOOST - Rolling features created
+2026-01-18 12:12:06,363 - XGBOOST - Final feature shape: (8710, 104)
+2026-01-18 12:12:06,363 - XGBOOST - Train: 6097, Val: 1306, Test: 1307
+2026-01-18 12:12:11,016 - XGBOOST - XGBoost model trained successfully
+2026-01-18 12:12:11,397 - XGBOOST - Prediction plot saved to c:\Users\Admin\Desktop\timeseries\practice\practice4\XGBoost\images\xgb_prediction_train.png
+2026-01-18 12:12:11,578 - XGBOOST - Residuals plot saved to c:\Users\Admin\Desktop\timeseries\practice\practice4\XGBoost\images\xgb_residuals_train.png
+2026-01-18 12:12:11,754 - XGBOOST - Prediction plot saved to c:\Users\Admin\Desktop\timeseries\practice\practice4\XGBoost\images\xgb_prediction_test.png
+2026-01-18 12:12:11,923 - XGBOOST - Residuals plot saved to c:\Users\Admin\Desktop\timeseries\practice\practice4\XGBoost\images\xgb_residuals_test.png
+2026-01-18 12:12:11,924 - XGBOOST - ===== XGBOOST TRAIN EVALUATION =====
+2026-01-18 12:12:11,925 - XGBOOST - RMSE: 232.5479
+2026-01-18 12:12:11,926 - XGBOOST - MAE : 173.8041
+2026-01-18 12:12:11,926 - XGBOOST - MAPE: 0.55%
+2026-01-18 12:12:11,926 - XGBOOST - ===== XGBOOST TEST EVALUATION =====
+2026-01-18 12:12:11,927 - XGBOOST - RMSE: 894.1787
+2026-01-18 12:12:11,927 - XGBOOST - MAE : 664.3313
+2026-01-18 12:12:11,928 - XGBOOST - MAPE: 2.36%

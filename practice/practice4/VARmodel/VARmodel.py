@@ -11,10 +11,6 @@ import os
 from datetime import datetime
 
 
-# Cấu hình log sẽ được thiết lập trong main() sau khi tạo thư mục logs/images.
-
-
-
 # Read data
 def load_data(file_path):
     df = pd.read_csv(file_path)
